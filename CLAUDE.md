@@ -8,7 +8,7 @@ There are two user roles:
 - **Author** — uses the editor to create and publish compositions
 - **Audience** — experiences the composition through the player
 
-Full project context and design decisions are documented in `CONTEXT.md` at the repo root. Read it before making architectural decisions.
+Full project context and design decisions are documented in `CONTEXT.md` at the repo root. Read it before making architectural decisions. If `CONTEXT.md` is conflicting with this document, or project's code, or your intuition, ask for clarification before proceeding.
 
 ---
 
