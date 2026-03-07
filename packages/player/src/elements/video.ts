@@ -148,4 +148,14 @@ export class VideoElement implements ElementRenderer {
     if (!this.syncWithClock || !this.vimeoPlayer) return;
     this.vimeoPlayer.setCurrentTime(Math.max(0, elementTime)).catch(() => {});
   }
+
+  pause(): void {
+    if (!this.syncWithClock || !this.vimeoPlayer) return;
+    this.vimeoPlayer.pause().catch(() => {});
+  }
+
+  resume(): void {
+    if (!this.syncWithClock || !this.vimeoPlayer) return;
+    this.vimeoPlayer.play().catch(() => {});
+  }
 }

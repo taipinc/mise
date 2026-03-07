@@ -3,4 +3,6 @@ export interface ElementRenderer {
   mount(): void;
   unmount(): void;
   seek(elementTime: number): void;
+  pause(): void;
+  resume(): void;
 }

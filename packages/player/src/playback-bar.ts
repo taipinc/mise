@@ -21,6 +21,8 @@ export class PlaybackBar {
   private readonly stageRoot: HTMLDivElement;
   private readonly clock: Clock;
   private readonly onSeek: (seconds: number) => void;
+  private readonly onPlay: () => void;
+  private readonly onPause: () => void;
   private readonly interactive: boolean;
   private readonly horizon: number;
   private readonly stageHeight: number;
@@ -39,11 +41,15 @@ export class PlaybackBar {
     stageRoot: HTMLDivElement,
     clock: Clock,
     composition: MiseComposition,
-    onSeek: (seconds: number) => void
+    onSeek: (seconds: number) => void,
+    onPlay: () => void,
+    onPause: () => void
   ) {
     this.stageRoot = stageRoot;
     this.clock = clock;
     this.onSeek = onSeek;
+    this.onPlay = onPlay;
+    this.onPause = onPause;
     this.interactive = composition.stage.playbackBar.interactive;
     this.horizon = computeHorizon(composition);
     this.stageHeight = composition.stage.viewBox.height;
@@ -115,13 +121,10 @@ export class PlaybackBar {
 
   private onPlayPauseClick = (): void => {
     if (this.isPlaying) {
-      this.clock.pause();
-      this.isPlaying = false;
+      this.onPause();
     } else {
-      this.clock.play();
-      this.isPlaying = true;
+      this.onPlay();
     }
-    this.updatePlayPauseButton();
   };
 
   private updatePlayPauseButton(): void {
@@ -164,9 +167,7 @@ export class PlaybackBar {
     this.isDragging = true;
     this.wasPlayingBeforeDrag = this.isPlaying;
     if (this.isPlaying) {
-      this.clock.pause();
-      this.isPlaying = false;
-      this.updatePlayPauseButton();
+      this.onPause();
     }
   };
 
@@ -183,9 +184,7 @@ export class PlaybackBar {
     this.isDragging = false;
     this.playhead.releasePointerCapture(e.pointerId);
     if (this.wasPlayingBeforeDrag) {
-      this.clock.play();
-      this.isPlaying = true;
-      this.updatePlayPauseButton();
+      this.onPlay();
     }
   };
 
