@@ -43,6 +43,58 @@ export class Stage {
       .mise-controls-visible .mise-resize-handle {
         opacity: 1;
       }
+      .mise-playback-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        z-index: 99999;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      .mise-playback-bar-visible {
+        opacity: 1;
+      }
+      .mise-play-pause-btn {
+        width: 40px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #fff;
+        font-size: 12px;
+        flex-shrink: 0;
+        user-select: none;
+      }
+      .mise-scrub-track {
+        flex: 1;
+        height: 100%;
+        position: relative;
+        cursor: pointer;
+      }
+      .mise-playhead {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 20px;
+        height: 20px;
+        background: rgba(160, 160, 160, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 11px;
+        cursor: grab;
+        user-select: none;
+      }
+      .mise-playhead:active {
+        cursor: grabbing;
+      }
     ${styles}`;
     this.shadow.appendChild(styleEl);
 

@@ -18,11 +18,26 @@ Full project context and design decisions are documented in `CONTEXT.md` at the 
 mise/
 ├── packages/
 │   ├── core/        # Schema types, Zod validation, The Clock engine
+│   │   └── src/
+│   │       ├── index.ts         # Public exports (schemas, types, Clock)
+│   │       ├── schema.ts        # Zod schemas + inferred types
+│   │       ├── types.ts         # Type re-exports
+│   │       └── clock.ts         # Clock engine
 │   ├── player/      # Vanilla TS runtime — reads project JSON, renders to browser
+│   │   └── src/
+│   │       ├── main.ts          # Dev harness entry point
+│   │       ├── player.ts        # MisePlayer — orchestrates Clock, Stage, elements
+│   │       ├── stage.ts         # Shadow DOM stage with viewBox scaling
+│   │       ├── playback-bar.ts  # Audience-facing transport controls
+│   │       └── elements/
+│   │           ├── video.ts     # Vimeo video element renderer
+│   │           └── flags.ts     # Movable, resizable, closable, zIndexable behaviors
 │   └── editor/      # React authoring tool — not started yet
 ├── compositions/    # Hand-written test JSON files
 │   ├── schema.json  # Reference schema document (not a real composition)
 │   └── test01.json  # First test composition
+├── CONTEXT.md       # Full project context and design decisions
+└── TODO.md          # Tracked future work items
 ```
 
 Package names: `@mise/core`, `@mise/player`, `@mise/editor`.
@@ -34,9 +49,35 @@ Package names: `@mise/core`, `@mise/player`, `@mise/editor`.
 We are building in this order:
 1. ✅ Define the JSON schema (`compositions/schema.json`)
 2. ✅ Write test compositions by hand (`compositions/test01.json`)
-3. 🔲 TypeScript types + Zod validation in `@mise/core`
-4. 🔲 The Clock engine in `@mise/core`
-5. 🔲 The player runtime in `@mise/player`
+3. ✅ TypeScript types + Zod validation in `@mise/core`
+4. ✅ The Clock engine in `@mise/core`
+5. 🔧 The player runtime in `@mise/player` (in progress — see below)
+
+### What's built so far
+
+**`@mise/core`** — complete:
+- `schema.ts` — Zod schemas for the full composition structure, types inferred via `z.infer<>`
+- `types.ts` — re-exports all inferred types
+- `clock.ts` — Clock class: `play()`, `pause()`, `seek()`, `currentTime`, event system (`open`, `close`, `tick`, `end`), loop support
+
+**`@mise/player`** — functional, not yet complete:
+- `stage.ts` — Shadow DOM stage with viewBox scaling via CSS transform, ResizeObserver, author styles injection
+- `player.ts` — MisePlayer class: wires Clock to element lifecycle, mounts/unmounts elements on cue, reconciles element state on seek (elements that should be visible at the seek target are mounted immediately)
+- `elements/video.ts` — VideoElement: Vimeo iframe embeds with `@vimeo/player` SDK, autoplay/mute handling, `autopause=0` for simultaneous playback, `syncWithClock` seek support
+- `elements/flags.ts` — `applyFlags()`: movable (title bar drag handle), resizable (corner handle), closable (× button), zIndexable (click to front). Uses `setPointerCapture` to avoid disrupting iframe playback. Controls fade in on hover via CSS class toggle.
+- `playback-bar.ts` — PlaybackBar: play/pause button, scrub track with draggable playhead, known-horizon calculation (latest cue when duration is null), ∞ state beyond horizon, hover-to-reveal near stage bottom
+
+### What's still TODO in Phase 1
+- Render remaining element types: `audio`, `image`, `text`, `graphic`, `component`
+- CSS enter/exit animation class injection (`animation.enter` / `animation.exit`)
+- Element `background: true` z-index pinning
+- Stage `background` support for image and video (color works now)
+- Author CSS customization of the Playback Bar via `classNames`
+- Element-level playback bars (`playback.bar`)
+- Audio mute/unmute toggle UI when `audio.audienceControl: true`
+- DOMPurify for HTML content sanitization at render time
+- Support multiple video providers (direct URLs, YouTube) — currently Vimeo only
+- Build custom video controls to replace Vimeo's native controls
 
 Do not start work on `@mise/editor` yet. The editor stack is not decided.
 
@@ -110,11 +151,10 @@ The `stage.styles` field is a CSS string. The player injects it into a Shadow DO
 
 ## What To Work On Next
 
-The immediate next task is `@mise/core`:
-
-1. Create `packages/core/src/schema.ts` — Zod schemas for the full project JSON, starting with the `Element` type, then `Stage`, then the root `Composition` type.
-2. Validate `compositions/test01.json` against the schema as a sanity check.
-3. Create `packages/core/src/clock.ts` — the Clock class: accepts a list of cues, tracks elapsed time, fires `open`/`close` events.
+Continue Phase 1 — the remaining player element types and polish. See "What's still TODO in Phase 1" above for the full list. Priorities:
+1. Render `image`, `text`, and `component` element types
+2. CSS enter/exit animation class injection
+3. Support direct video URLs (native `<video>` element) alongside Vimeo embeds
 
 Refer to `compositions/schema.json` as the source of truth for field names and types. Any ambiguity should be resolved against `CONTEXT.md`.
 

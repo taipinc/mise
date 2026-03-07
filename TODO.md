@@ -8,3 +8,10 @@
   - YouTube embeds
   - Other CDNs
 - For consideration: Support for elements partially outside the Stage/canvas.
+
+## Playback Bar
+- [ ] Support author CSS customization of the Playback Bar via the
+      `stage.playbackBar.classNames` field in the composition JSON —
+      apply these classes to the `mise-playback-bar` element at render
+      time so authors can fully override the default styles via their
+      `stage.styles` CSS string
