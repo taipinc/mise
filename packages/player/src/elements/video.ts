@@ -1,5 +1,6 @@
 import type { MiseElement } from "@mise/core";
 import Player from "@vimeo/player";
+import { applyFlags, type FlagsCleanup } from "./flags";
 
 function extractVimeoId(src: string): string {
   const match = src.match(/(\d+)\s*$/);
@@ -12,13 +13,17 @@ function extractVimeoId(src: string): string {
 export class VideoElement {
   private readonly element: MiseElement;
   private readonly stageRoot: HTMLDivElement;
+  private readonly onCloseCallback: (() => void) | null;
+  private wrapper: HTMLDivElement | null = null;
   private iframe: HTMLIFrameElement | null = null;
   private vimeoPlayer: Player | null = null;
+  private flagsCleanup: FlagsCleanup | null = null;
   readonly syncWithClock: boolean;
 
-  constructor(element: MiseElement, stageRoot: HTMLDivElement) {
+  constructor(element: MiseElement, stageRoot: HTMLDivElement, onClose?: () => void) {
     this.element = element;
     this.stageRoot = stageRoot;
+    this.onCloseCallback = onClose ?? null;
     this.syncWithClock = element.playback?.syncWithClock ?? false;
   }
 
@@ -41,24 +46,39 @@ export class VideoElement {
       params.set("loop", "1");
     }
     params.set("controls", el.playback?.audienceControl ? "1" : "0");
+    params.set("autopause", "0");
+
+    // Wrapper div holds the iframe + flag UI (close btn, resize handle)
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("mise-element");
+    wrapper.style.position = "absolute";
+    wrapper.style.left = `${el.position.x}px`;
+    wrapper.style.top = `${el.position.y}px`;
+    wrapper.style.width = `${el.size.width}px`;
+    wrapper.style.height = `${el.size.height}px`;
+    wrapper.dataset.miseId = el.id;
+
+    if (el.zIndex !== null) {
+      wrapper.style.zIndex = String(el.zIndex);
+    }
 
     const iframe = document.createElement("iframe");
     iframe.src = `https://player.vimeo.com/video/${videoId}?${params.toString()}`;
-    iframe.style.position = "absolute";
-    iframe.style.left = `${el.position.x}px`;
-    iframe.style.top = `${el.position.y}px`;
-    iframe.style.width = `${el.size.width}px`;
-    iframe.style.height = `${el.size.height}px`;
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
     iframe.style.border = "none";
+    iframe.style.display = "block";
     iframe.setAttribute("allow", "autoplay; fullscreen");
-    iframe.dataset.miseId = el.id;
 
-    if (el.zIndex !== null) {
-      iframe.style.zIndex = String(el.zIndex);
-    }
-
-    this.stageRoot.appendChild(iframe);
+    wrapper.appendChild(iframe);
+    this.stageRoot.appendChild(wrapper);
+    this.wrapper = wrapper;
     this.iframe = iframe;
+
+    this.flagsCleanup = applyFlags(wrapper, el, this.stageRoot, () => {
+      this.unmount();
+      this.onCloseCallback?.();
+    });
 
     const player = new Player(iframe);
     this.vimeoPlayer = player;
@@ -67,7 +87,6 @@ export class VideoElement {
       if (wantsAutoplay) {
         player.play().catch(() => {});
       }
-      // Unmute after playback starts if audio.initial is "on"
       if (!wantsMuted) {
         player.setMuted(false).catch(() => {});
       }
@@ -75,12 +94,17 @@ export class VideoElement {
   }
 
   unmount(): void {
+    if (this.flagsCleanup) {
+      this.flagsCleanup.destroy();
+      this.flagsCleanup = null;
+    }
     if (this.vimeoPlayer) {
       this.vimeoPlayer.destroy().catch(() => {});
       this.vimeoPlayer = null;
     }
-    if (this.iframe) {
-      this.iframe.remove();
+    if (this.wrapper) {
+      this.wrapper.remove();
+      this.wrapper = null;
       this.iframe = null;
     }
   }

@@ -7,3 +7,4 @@
   - Direct file URLs (MP4/WebM) using native `<video>` element
   - YouTube embeds
   - Other CDNs
+- For consideration: Support for elements partially outside the Stage/canvas.

@@ -66,7 +66,9 @@ export class MisePlayer {
     if (!el) return;
 
     if (el.type === "video") {
-      const renderer = new VideoElement(el, this.stage.root);
+      const renderer = new VideoElement(el, this.stage.root, () => {
+        this.mountedElements.delete(elementId);
+      });
       renderer.mount();
       this.mountedElements.set(elementId, renderer);
     }
@@ -78,6 +80,7 @@ export class MisePlayer {
     renderer.unmount();
     this.mountedElements.delete(elementId);
   }
+
 
   private findElement(id: string): MiseElement | undefined {
     return this.composition.elements.find((el) => el.id === id);
