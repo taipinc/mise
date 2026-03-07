@@ -9,9 +9,11 @@
   },
   "dependencies": {
     "@mise/core": "workspace:*",
-    "@vimeo/player": "^2.30.3"
+    "@vimeo/player": "^2.30.3",
+    "dompurify": "^3.3.2"
   },
   "devDependencies": {
+    "@types/dompurify": "^3.2.0",
     "typescript": "^5.9.3",
     "vite": "^6.3.5"
   }

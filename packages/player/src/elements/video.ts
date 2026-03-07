@@ -1,6 +1,8 @@
 import type { MiseElement } from "@mise/core";
 import Player from "@vimeo/player";
+import type { ElementRenderer } from "./renderer";
 import { applyFlags, type FlagsCleanup } from "./flags";
+import { applyAnimation } from "./animation";
 
 function extractVimeoId(src: string): string {
   const match = src.match(/(\d+)\s*$/);
@@ -10,7 +12,7 @@ function extractVimeoId(src: string): string {
   return match[1];
 }
 
-export class VideoElement {
+export class VideoElement implements ElementRenderer {
   private readonly element: MiseElement;
   private readonly stageRoot: HTMLDivElement;
   private readonly onCloseCallback: (() => void) | null;
@@ -75,10 +77,16 @@ export class VideoElement {
     this.wrapper = wrapper;
     this.iframe = iframe;
 
+    applyAnimation(wrapper, el.animation.enter);
+
     this.flagsCleanup = applyFlags(wrapper, el, this.stageRoot, () => {
       this.unmount();
       this.onCloseCallback?.();
     });
+
+    for (const cls of el.classNames) {
+      wrapper.classList.add(cls);
+    }
 
     const player = new Player(iframe);
     this.vimeoPlayer = player;
@@ -98,14 +106,19 @@ export class VideoElement {
       this.flagsCleanup.destroy();
       this.flagsCleanup = null;
     }
-    if (this.vimeoPlayer) {
-      this.vimeoPlayer.destroy().catch(() => {});
-      this.vimeoPlayer = null;
-    }
+    const vp = this.vimeoPlayer;
+    this.vimeoPlayer = null;
     if (this.wrapper) {
-      this.wrapper.remove();
-      this.wrapper = null;
-      this.iframe = null;
+      applyAnimation(this.wrapper, this.element.animation.exit, () => {
+        if (vp) {
+          vp.destroy().catch(() => {});
+        }
+        this.wrapper?.remove();
+        this.wrapper = null;
+        this.iframe = null;
+      });
+    } else if (vp) {
+      vp.destroy().catch(() => {});
     }
   }
 

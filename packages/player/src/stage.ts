@@ -101,7 +101,28 @@ export class Stage {
     this.stageDiv = document.createElement("div");
     this.stageDiv.classList.add("mise-stage");
     if (background) {
-      this.stageDiv.style.background = background;
+      if (/\.(mp4|webm|ogg)(\?|$)/i.test(background)) {
+        const video = document.createElement("video");
+        video.src = background;
+        video.autoplay = true;
+        video.loop = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.style.position = "absolute";
+        video.style.top = "0";
+        video.style.left = "0";
+        video.style.width = "100%";
+        video.style.height = "100%";
+        video.style.objectFit = "cover";
+        video.style.zIndex = "-1";
+        this.stageDiv.appendChild(video);
+      } else if (/\.(jpg|jpeg|png|gif|webp|svg|avif)(\?|$)/i.test(background)) {
+        this.stageDiv.style.backgroundImage = `url(${background})`;
+        this.stageDiv.style.backgroundSize = "cover";
+        this.stageDiv.style.backgroundPosition = "center";
+      } else {
+        this.stageDiv.style.background = background;
+      }
     }
     this.shadow.appendChild(this.stageDiv);
 

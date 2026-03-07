@@ -1,14 +1,20 @@
 import { Clock } from "@mise/core";
 import type { MiseComposition, MiseElement } from "@mise/core";
 import { Stage } from "./stage";
+import type { ElementRenderer } from "./elements/renderer";
 import { VideoElement } from "./elements/video";
+import { AudioElement } from "./elements/audio";
+import { ImageElement } from "./elements/image";
+import { TextElement } from "./elements/text";
+import { ComponentElement } from "./elements/component";
 import { PlaybackBar } from "./playback-bar";
 
 export class MisePlayer {
   private readonly stage: Stage;
   private readonly clock: Clock;
   private readonly composition: MiseComposition;
-  private readonly mountedElements: Map<string, VideoElement> = new Map();
+  private readonly mountedElements: Map<string, ElementRenderer> = new Map();
+  private readonly userClosedElements: Set<string> = new Set();
   private readonly playbackBar: PlaybackBar | null = null;
 
   constructor(host: HTMLElement, composition: MiseComposition) {
@@ -61,13 +67,18 @@ export class MisePlayer {
     for (const el of this.composition.elements) {
       if (el.open.mode === "link") continue;
 
+      // If we seeked before this element's open cue, reset its user-closed state
+      if (time < el.open.at) {
+        this.userClosedElements.delete(el.id);
+      }
+
       const shouldBeOpen =
         el.open.at <= time &&
         (el.close.mode === "none" || el.close.at === null || el.close.at > time);
 
       const isMounted = this.mountedElements.has(el.id);
 
-      if (shouldBeOpen && !isMounted) {
+      if (shouldBeOpen && !isMounted && !this.userClosedElements.has(el.id)) {
         this.onElementOpen(el.id);
       } else if (!shouldBeOpen && isMounted) {
         this.onElementClose(el.id);
@@ -99,12 +110,47 @@ export class MisePlayer {
     const el = this.findElement(elementId);
     if (!el) return;
 
-    if (el.type === "video") {
-      const renderer = new VideoElement(el, this.stage.root, () => {
-        this.mountedElements.delete(elementId);
-      });
-      renderer.mount();
-      this.mountedElements.set(elementId, renderer);
+    const onClose = (): void => {
+      this.userClosedElements.add(elementId);
+      this.mountedElements.delete(elementId);
+    };
+    const onAction = (action: string): void => {
+      this.handleAction(action);
+    };
+
+    let renderer: ElementRenderer | null = null;
+
+    switch (el.type) {
+      case "video":
+        renderer = new VideoElement(el, this.stage.root, onClose);
+        break;
+      case "audio":
+        renderer = new AudioElement(el);
+        break;
+      case "image":
+        renderer = new ImageElement(el, this.stage.root, onClose);
+        break;
+      case "text":
+        renderer = new TextElement(el, this.stage.root, onClose);
+        break;
+      case "component":
+        renderer = new ComponentElement(el, this.stage.root, onClose, onAction);
+        break;
+    }
+
+    if (!renderer) return;
+
+    renderer.mount();
+    this.mountedElements.set(elementId, renderer);
+
+    // Background pinning: force z-index 0, prevent zIndexable from raising
+    if (el.background) {
+      const wrapper = this.stage.root.querySelector(
+        `[data-mise-id="${elementId}"]`
+      ) as HTMLElement | null;
+      if (wrapper) {
+        wrapper.style.zIndex = "0";
+      }
     }
   }
 
@@ -115,6 +161,18 @@ export class MisePlayer {
     this.mountedElements.delete(elementId);
   }
 
+
+  private handleAction(action: string): void {
+    const match = action.match(/^(open|close):(.+)$/);
+    if (!match) return;
+
+    const [, verb, targetId] = match;
+    if (verb === "open") {
+      this.onElementOpen(targetId);
+    } else if (verb === "close") {
+      this.onElementClose(targetId);
+    }
+  }
 
   private findElement(id: string): MiseElement | undefined {
     return this.composition.elements.find((el) => el.id === id);
