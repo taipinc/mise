@@ -41,3 +41,14 @@ export type {
   MiseElement,
   MiseComposition,
 } from "./types";
+
+// Clock engine
+export { Clock } from "./clock";
+export type {
+  ClockEvent,
+  ClockEventData,
+  ClockOpenEvent,
+  ClockCloseEvent,
+  ClockTickEvent,
+  ClockEndEvent,
+} from "./clock";
