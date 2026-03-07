@@ -81,6 +81,8 @@ export class ComponentElement implements ElementRenderer {
   }
 
   seek(): void {}
+  pause(): void {}
+  resume(): void {}
 
   private onWrapperClick = (e: Event): void => {
     const target = e.target as HTMLElement;

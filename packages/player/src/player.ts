@@ -35,7 +35,9 @@ export class MisePlayer {
         this.stage.root,
         this.clock,
         composition,
-        (seconds) => this.seek(seconds)
+        (seconds) => this.seek(seconds),
+        () => this.play(),
+        () => this.pause()
       );
     }
   }
@@ -51,11 +53,13 @@ export class MisePlayer {
   play(): void {
     this.clock.play();
     this.playbackBar?.syncPlayState(true);
+    this.resumeSyncedElements();
   }
 
   pause(): void {
     this.clock.pause();
     this.playbackBar?.syncPlayState(false);
+    this.pauseSyncedElements();
   }
 
   seek(seconds: number): void {
@@ -171,6 +175,22 @@ export class MisePlayer {
       this.onElementOpen(targetId);
     } else if (verb === "close") {
       this.onElementClose(targetId);
+    }
+  }
+
+  private pauseSyncedElements(): void {
+    for (const renderer of this.mountedElements.values()) {
+      if (renderer.syncWithClock) {
+        renderer.pause();
+      }
+    }
+  }
+
+  private resumeSyncedElements(): void {
+    for (const renderer of this.mountedElements.values()) {
+      if (renderer.syncWithClock) {
+        renderer.resume();
+      }
     }
   }
 

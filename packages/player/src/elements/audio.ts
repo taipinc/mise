@@ -43,4 +43,14 @@ export class AudioElement implements ElementRenderer {
     if (!this.syncWithClock || !this.audioEl) return;
     this.audioEl.currentTime = Math.max(0, elementTime);
   }
+
+  pause(): void {
+    if (!this.syncWithClock || !this.audioEl) return;
+    this.audioEl.pause();
+  }
+
+  resume(): void {
+    if (!this.syncWithClock || !this.audioEl) return;
+    this.audioEl.play().catch(() => {});
+  }
 }
