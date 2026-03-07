@@ -30,12 +30,19 @@ mise/
 │   │       ├── stage.ts         # Shadow DOM stage with viewBox scaling
 │   │       ├── playback-bar.ts  # Audience-facing transport controls
 │   │       └── elements/
+│   │           ├── renderer.ts  # Common ElementRenderer interface
+│   │           ├── animation.ts # CSS enter/exit animation injection
 │   │           ├── video.ts     # Vimeo video element renderer
+│   │           ├── audio.ts     # Native <audio> element renderer
+│   │           ├── image.ts     # <img> element renderer
+│   │           ├── text.ts      # DOMPurify-sanitized HTML content renderer
+│   │           ├── component.ts # HTML content + data-mise-action link handling
 │   │           └── flags.ts     # Movable, resizable, closable, zIndexable behaviors
 │   └── editor/      # React authoring tool — not started yet
 ├── compositions/    # Hand-written test JSON files
 │   ├── schema.json  # Reference schema document (not a real composition)
-│   └── test01.json  # First test composition
+│   ├── test01.json  # First test composition (two Vimeo videos)
+│   └── test02.json  # Second test (image, text, component, video, background)
 ├── CONTEXT.md       # Full project context and design decisions
 └── TODO.md          # Tracked future work items
 ```
@@ -61,23 +68,26 @@ We are building in this order:
 - `clock.ts` — Clock class: `play()`, `pause()`, `seek()`, `currentTime`, event system (`open`, `close`, `tick`, `end`), loop support
 
 **`@mise/player`** — functional, not yet complete:
-- `stage.ts` — Shadow DOM stage with viewBox scaling via CSS transform, ResizeObserver, author styles injection
-- `player.ts` — MisePlayer class: wires Clock to element lifecycle, mounts/unmounts elements on cue, reconciles element state on seek (elements that should be visible at the seek target are mounted immediately)
-- `elements/video.ts` — VideoElement: Vimeo iframe embeds with `@vimeo/player` SDK, autoplay/mute handling, `autopause=0` for simultaneous playback, `syncWithClock` seek support
+- `stage.ts` — Shadow DOM stage with viewBox scaling via CSS transform, ResizeObserver, author styles injection. Background supports CSS values, image URLs, and video URLs (auto-detected by file extension).
+- `player.ts` — MisePlayer class: wires Clock to element lifecycle, mounts/unmounts elements on cue, reconciles element state on seek. Tracks `userClosedElements` so manually-closed elements don't reappear on seek (reset when seeking before the element's open cue). Handles `data-mise-action` dispatching (`open:id`, `close:id`). Background pinning sets z-index 0 on `background: true` elements.
+- `elements/renderer.ts` — `ElementRenderer` interface: `mount()`, `unmount()`, `seek()`, `syncWithClock`
+- `elements/animation.ts` — `applyAnimation()`: adds enter class (removes after 500ms), adds exit class (waits for `animationend` or 600ms timeout before DOM removal)
+- `elements/video.ts` — VideoElement: Vimeo iframe embeds with `@vimeo/player` SDK, autoplay/mute handling, `autopause=0` for simultaneous playback, `syncWithClock` seek support, enter/exit animation
+- `elements/audio.ts` — AudioElement: headless native `<audio>` element, no DOM wrapper, supports loop/mute/syncWithClock seek
+- `elements/image.ts` — ImageElement: `<img>` with `object-fit: cover`, flags, classNames, enter/exit animation
+- `elements/text.ts` — TextElement: DOMPurify-sanitized HTML content, flags, classNames, enter/exit animation
+- `elements/component.ts` — ComponentElement: DOMPurify-sanitized HTML (preserves `data-mise-action` attr), click listener dispatches actions to player, flags, classNames, enter/exit animation
 - `elements/flags.ts` — `applyFlags()`: movable (title bar drag handle), resizable (corner handle), closable (× button), zIndexable (click to front). Uses `setPointerCapture` to avoid disrupting iframe playback. Controls fade in on hover via CSS class toggle.
 - `playback-bar.ts` — PlaybackBar: play/pause button, scrub track with draggable playhead, known-horizon calculation (latest cue when duration is null), ∞ state beyond horizon, hover-to-reveal near stage bottom
 
 ### What's still TODO in Phase 1
-- Render remaining element types: `audio`, `image`, `text`, `graphic`, `component`
-- CSS enter/exit animation class injection (`animation.enter` / `animation.exit`)
-- Element `background: true` z-index pinning
-- Stage `background` support for image and video (color works now)
+- Render `graphic` element type
 - Author CSS customization of the Playback Bar via `classNames`
 - Element-level playback bars (`playback.bar`)
 - Audio mute/unmute toggle UI when `audio.audienceControl: true`
-- DOMPurify for HTML content sanitization at render time
 - Support multiple video providers (direct URLs, YouTube) — currently Vimeo only
 - Build custom video controls to replace Vimeo's native controls
+- `seek:N` action support in `data-mise-action` links
 
 Do not start work on `@mise/editor` yet. The editor stack is not decided.
 
@@ -151,10 +161,10 @@ The `stage.styles` field is a CSS string. The player injects it into a Shadow DO
 
 ## What To Work On Next
 
-Continue Phase 1 — the remaining player element types and polish. See "What's still TODO in Phase 1" above for the full list. Priorities:
-1. Render `image`, `text`, and `component` element types
-2. CSS enter/exit animation class injection
-3. Support direct video URLs (native `<video>` element) alongside Vimeo embeds
+Continue Phase 1 — polish and remaining features. See "What's still TODO in Phase 1" above for the full list. Priorities:
+1. Support direct video URLs (native `<video>` element) alongside Vimeo embeds
+2. Author CSS customization of the Playback Bar via `classNames`
+3. Element-level playback bars
 
 Refer to `compositions/schema.json` as the source of truth for field names and types. Any ambiguity should be resolved against `CONTEXT.md`.
 
