@@ -50,7 +50,8 @@
         "closable": false,
         "zIndexable": false
       },
-      "animation": { "enter": "entering", "exit": "exiting" }
+      "animation": { "enter": "entering", "exit": "exiting" },
+      "mediaFit": "fill"
     },
     {
       "id": "text01",
@@ -92,7 +93,8 @@
         "closable": true,
         "zIndexable": true
       },
-      "animation": { "enter": "entering", "exit": "exiting" }
+      "animation": { "enter": "entering", "exit": "exiting" },
+      "mediaFit": "fit"
     },
     {
       "id": "component01",
@@ -163,7 +165,38 @@
         "closable": true,
         "zIndexable": true
       },
-      "animation": { "enter": "entering", "exit": "exiting" }
+      "animation": { "enter": "entering", "exit": "exiting" },
+      "mediaFit": "fill"
+    },
+    {
+      "id": "video02",
+      "type": "video",
+      "src": "https://vimeo.com/1161479294",
+      "content": null,
+      "open": { "mode": "cue", "at": 6.0 },
+      "close": { "mode": "none", "at": null },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "playing",
+        "loop": true,
+        "syncWithClock": true,
+        "audienceControl": false,
+        "bar": { "visible": false, "classNames": [] }
+      },
+      "audio": { "initial": "off", "audienceControl": false },
+      "position": { "x": 100, "y": 380 },
+      "size": { "width": 500, "height": 280 },
+      "zIndex": null,
+      "background": false,
+      "classNames": [],
+      "flags": {
+        "movable": true,
+        "resizable": true,
+        "closable": true,
+        "zIndexable": true
+      },
+      "animation": { "enter": "entering", "exit": "exiting" },
+      "mediaFit": "fit"
     }
   ]
 }

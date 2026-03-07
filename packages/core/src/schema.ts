@@ -132,6 +132,7 @@ export const ElementSchema = z
     classNames: z.array(z.string()),
     flags: FlagsSchema,
     animation: AnimationSchema,
+    mediaFit: z.enum(["fit", "fill"]).default("fill").optional(),
   })
   .passthrough();
 

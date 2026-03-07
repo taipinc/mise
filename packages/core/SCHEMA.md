@@ -96,6 +96,7 @@ These fields apply to all element types.
 | `classNames` | `string[]` | `[]` | CSS class names applied to the element's wrapper div. Use these in `stage.styles` to style the element. |
 | `flags` | `Flags` | — | Interaction behaviors available to the audience. |
 | `animation` | `Animation` | — | CSS class names injected at mount and unmount for enter/exit transitions. |
+| `mediaFit` | `"fit" \| "fill"` | `"fill"` | Controls how media fills its element box. `"fit"` = `object-fit: contain` (media constrained within the box, no crop, may letterbox). `"fill"` = `object-fit: cover` (media fills the box, cropped if needed). Never stretches. Applies to `image` and `video` types only. |
 
 ### ElementOpen
 

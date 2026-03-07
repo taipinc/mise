@@ -64,15 +64,37 @@ export class VideoElement implements ElementRenderer {
       wrapper.style.zIndex = String(el.zIndex);
     }
 
+    // Clip container for mediaFit — iframe can't receive object-fit directly
+    const clipContainer = document.createElement("div");
+    clipContainer.style.width = "100%";
+    clipContainer.style.height = "100%";
+    clipContainer.style.overflow = "hidden";
+    clipContainer.style.position = "relative";
+
     const iframe = document.createElement("iframe");
     iframe.src = `https://player.vimeo.com/video/${videoId}?${params.toString()}`;
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
     iframe.style.border = "none";
     iframe.style.display = "block";
     iframe.setAttribute("allow", "autoplay; fullscreen");
 
-    wrapper.appendChild(iframe);
+    if (el.mediaFit === "fit") {
+      // Contain: iframe fits within the box, no crop
+      iframe.style.width = "100%";
+      iframe.style.height = "100%";
+    } else {
+      // Cover (default): oversized iframe centered, clipped by container
+      iframe.style.position = "absolute";
+      iframe.style.top = "50%";
+      iframe.style.left = "50%";
+      iframe.style.width = "177.78vh";
+      iframe.style.height = "56.25vw";
+      iframe.style.minWidth = "100%";
+      iframe.style.minHeight = "100%";
+      iframe.style.transform = "translate(-50%, -50%)";
+    }
+
+    clipContainer.appendChild(iframe);
+    wrapper.appendChild(clipContainer);
     this.stageRoot.appendChild(wrapper);
     this.wrapper = wrapper;
     this.iframe = iframe;
