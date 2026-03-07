@@ -34,6 +34,15 @@ export class Stage {
         transform-origin: top left;
         overflow: hidden;
       }
+      .mise-title-bar,
+      .mise-resize-handle {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      .mise-controls-visible .mise-title-bar,
+      .mise-controls-visible .mise-resize-handle {
+        opacity: 1;
+      }
     ${styles}`;
     this.shadow.appendChild(styleEl);
 
