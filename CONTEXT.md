@@ -108,58 +108,7 @@ Independent objects placed on the stage. Elements can be opened by the Clock (vi
 
 **Element properties:**
 
-```json
-{
-  "id": "unique-string",
-  "type": "video | audio | image | text | graphic | component",
-  "src": "https://...",
-  "content": "HTML string (for text and component types)",
-
-  "open": {
-    "mode": "cue | link | both",
-    "at": 12.5
-  },
-  "close": {
-    "mode": "cue | userClose | none",
-    "at": 45.0
-  },
-
-  "loop": false,
-  "persistOnLoop": false,
-
-  "playback": {
-    "initial": "playing | paused",
-    "audienceControl": true,
-    "bar": {
-      "visible": true,
-      "classNames": ["element-playbar"]
-    }
-  },
-
-  "audio": {
-    "initial": "on | off",
-    "audienceControl": true
-  },
-
-  "position": { "x": 100, "y": 80 },
-  "size": { "width": 640, "height": 360 },
-  "zIndex": 2,
-  "background": false,
-
-  "classNames": ["window", "video-window"],
-
-  "flags": {
-    "movable": true,
-    "resizable": true,
-    "closable": true
-  },
-
-  "animation": {
-    "enter": "entering",
-    "exit": "exiting"
-  }
-}
-```
+Available in /composition/schema.md
 
 **Notes:**
 - `playback` applies to `video` and `audio` elements only. `playback.initial` sets whether the element starts playing or paused when it opens. `playback.audienceControl` determines whether the audience can play/pause the element. `playback.bar` gives each media element its own independent playback bar — separate from the stage-level Playback Bar, which controls the Clock. The element playback bar is fully CSS-styleable via `classNames`.
