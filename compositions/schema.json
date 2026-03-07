@@ -1,0 +1,101 @@
+{
+  "_comment": "Mise Project Schema v0.1 — Reference Document",
+
+  "version": "0.1",
+
+  "meta": {
+    "title": "",
+    "author": "",
+    "description": "",
+    "created": "",
+    "modified": ""
+  },
+
+  "stage": {
+    "viewBox": { "width": 1920, "height": 1080 },
+    "scaling": true,
+    "background": "",
+    "poster": "",
+    "styles": "",
+
+    "playback": {
+      "duration": null,
+      "loop": false,
+      "sync": {
+        "withClock": true
+      }
+    },
+
+    "playbackBar": {
+      "visible": true,
+      "interactive": true,
+      "classNames": []
+    }
+  },
+
+  "elements": [
+    {
+      "_comment": "Element schema reference — not a real element",
+
+      "id": "unique-string",
+      "type": "video | audio | image | text | graphic | component",
+      "src": "https://...",
+      "content": "HTML string — text and component types only",
+
+      "open": {
+        "mode": "cue | link | both",
+        "at": 12.5
+      },
+      "close": {
+        "mode": "cue | userClose | none",
+        "at": 45.0
+      },
+
+      "persistOnLoop": false,
+
+      "playback": {
+        "initial": "playing | paused",
+        "loop": false,
+        "syncWithClock": true,
+        "audienceControl": true,
+        "bar": {
+          "visible": true,
+          "classNames": []
+        }
+      },
+
+      "audio": {
+        "initial": "on | off",
+        "audienceControl": true
+      },
+
+      "position": {
+        "_comment": "Top-left corner of the element, in stage coordinate units",
+        "x": 100,
+        "y": 80
+      },
+      "size": { "width": 640, "height": 360 },
+
+      "zIndex": null,
+      "_zIndex_comment": "null = auto, stacks by cue firing order. Integer overrides.",
+
+      "background": false,
+      "_background_comment": "true pins this element behind all others, regardless of zIndex",
+
+      "classNames": [],
+
+      "flags": {
+        "movable": true,
+        "resizable": true,
+        "closable": true,
+        "zIndexable": true
+      },
+      "_flags_comment": "zIndexable: whether the audience can reorder this element (e.g. click to bring to front)",
+
+      "animation": {
+        "enter": "entering",
+        "exit": "exiting"
+      }
+    }
+  ]
+}
