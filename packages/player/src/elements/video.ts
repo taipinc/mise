@@ -12,6 +12,27 @@ function extractVimeoId(src: string): string {
   return match[1];
 }
 
+const ASSUMED_VIDEO_ASPECT = 16 / 9;
+
+function applyCoverSize(iframe: HTMLIFrameElement, containerW: number, containerH: number): void {
+  const containerAspect = containerW / containerH;
+  let iframeW: number;
+  let iframeH: number;
+
+  if (containerAspect > ASSUMED_VIDEO_ASPECT) {
+    // Container is wider than video — match width, overflow height
+    iframeW = containerW;
+    iframeH = containerW / ASSUMED_VIDEO_ASPECT;
+  } else {
+    // Container is taller than video — match height, overflow width
+    iframeH = containerH;
+    iframeW = containerH * ASSUMED_VIDEO_ASPECT;
+  }
+
+  iframe.style.width = `${iframeW}px`;
+  iframe.style.height = `${iframeH}px`;
+}
+
 export class VideoElement implements ElementRenderer {
   private readonly element: MiseElement;
   private readonly stageRoot: HTMLDivElement;
@@ -20,6 +41,7 @@ export class VideoElement implements ElementRenderer {
   private iframe: HTMLIFrameElement | null = null;
   private vimeoPlayer: Player | null = null;
   private flagsCleanup: FlagsCleanup | null = null;
+  private resizeObserver: ResizeObserver | null = null;
   readonly syncWithClock: boolean;
 
   constructor(element: MiseElement, stageRoot: HTMLDivElement, onClose?: () => void) {
@@ -82,15 +104,20 @@ export class VideoElement implements ElementRenderer {
       iframe.style.width = "100%";
       iframe.style.height = "100%";
     } else {
-      // Cover (default): oversized iframe centered, clipped by container
+      // Cover (default): iframe sized to cover container, centered and clipped
       iframe.style.position = "absolute";
       iframe.style.top = "50%";
       iframe.style.left = "50%";
-      iframe.style.width = "177.78vh";
-      iframe.style.height = "56.25vw";
-      iframe.style.minWidth = "100%";
-      iframe.style.minHeight = "100%";
       iframe.style.transform = "translate(-50%, -50%)";
+      applyCoverSize(iframe, el.size.width, el.size.height);
+
+      // Recompute on resize (user drag-resize)
+      this.resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          applyCoverSize(iframe, entry.contentRect.width, entry.contentRect.height);
+        }
+      });
+      this.resizeObserver.observe(clipContainer);
     }
 
     clipContainer.appendChild(iframe);
@@ -124,6 +151,10 @@ export class VideoElement implements ElementRenderer {
   }
 
   unmount(): void {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
     if (this.flagsCleanup) {
       this.flagsCleanup.destroy();
       this.flagsCleanup = null;
