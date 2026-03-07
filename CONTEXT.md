@@ -194,27 +194,27 @@ mise/
 A composition with multiple video elements (each with `muted` toggled differently), audio elements, and text elements. Multiple cue types: some elements open/close on timestamps, some are set to `userClose`. Some CSS styling for element windows. A looping element. A `persistOnLoop` element. This will exercise all core schema and Clock functionality.
 
 **Tasks:**
-- [ ] Define and finalize the project JSON schema (`@mise/core`)
-- [ ] Implement Zod validation for schema
-- [ ] Build The Clock (cue scheduling, loop, open-ended)
-- [ ] Implement the player runtime (Shadow DOM stage, viewBox scaling)
-- [ ] Render: video (with muted flag), audio, image, text, component elements
-- [ ] Implement movable, resizable, closable flags
-- [ ] Implement CSS enter/exit animation class injection
-- [ ] Implement stage `background` property (color, image, video)
-- [ ] Implement element `background: true` z-index pinning
-- [ ] Render the Playback Bar (visible, interactive properties)
-- [ ] Basic README and schema documentation (`SCHEMA.md`)
+- [x] Define and finalize the project JSON schema (`@mise/core`)
+- [x] Implement Zod validation for schema
+- [x] Build The Clock (cue scheduling, loop, open-ended)
+- [x] Implement the player runtime (Shadow DOM stage, viewBox scaling)
+- [x] Render: video (with muted flag), audio, image, text, component elements
+- [x] Implement movable, resizable, closable flags
+- [x] Implement CSS enter/exit animation class injection
+- [x] Implement stage `background` property (color, image, video)
+- [x] Implement element `background: true` z-index pinning
+- [x] Render the Playback Bar (visible, interactive properties)
+- [x] Basic README and schema documentation (`SCHEMA.md`)
 
 ### Phase 2 — Graphics & Styling
 
 **Goal:** Full CSS authoring support and graphic element type.
 
-- [ ] Add `graphic` element type (SVG-based)
-- [ ] Implement full CSS style block with Shadow DOM injection
-- [ ] Style the Playback Bar via CSS
-- [ ] Develop the OS desktop aesthetic as a reference CSS theme
-- [ ] Publish community CSS theme format spec
+- [-] Add `graphic` element type (SVG-based) (pushed for later consideration)
+- [?] Implement full CSS style block with Shadow DOM injection (Need to understand what this is?)
+- [-] Style the Playback Bar via CSS (already styled, but should be revisited with a proper design)
+- [-] Develop the OS desktop aesthetic as a reference CSS theme (pushed for later consideration)
+- [-] Publish community CSS theme format spec (pushed for later consideration)
 
 ### Phase 3 — Minimal Editor
 
@@ -232,11 +232,11 @@ A composition with multiple video elements (each with `muted` toggled differentl
 
 **Goal:** Elements can respond to audience input and trigger the Clock or other elements.
 
-- [ ] Design element link schema (trigger → target element ID)
-- [ ] Implement link-triggered element opening in the player
-- [ ] Audience input handlers: click, hover, keypress
-- [ ] State variables in project JSON
-- [ ] Branching Clock support (jump to timestamp on event)
+- [x] Design element link schema (trigger → target element ID)
+- [x] Implement link-triggered element opening in the player
+- [?] Audience input handlers: click, hover, keypress (already implemented?)
+- [ ] State variables in project JSON (what is this?)
+- [-] Branching Clock support (jump to timestamp on event) (calcelled for later consideration)
 - [ ] Conditional element visibility
 
 ### Phase 5 — Platform & Community
