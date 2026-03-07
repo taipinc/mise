@@ -2,7 +2,7 @@ import { CompositionSchema } from "@mise/core";
 import { MisePlayer } from "./player";
 
 async function init(): Promise<void> {
-  const res = await fetch("/compositions/test01.json");
+  const res = await fetch("/compositions/test02.json");
   const raw: unknown = await res.json();
 
   const result = CompositionSchema.safeParse(raw);
