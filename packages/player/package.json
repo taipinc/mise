@@ -8,7 +8,8 @@
     "build": "tsc && vite build"
   },
   "dependencies": {
-    "@mise/core": "workspace:*"
+    "@mise/core": "workspace:*",
+    "@vimeo/player": "^2.30.3"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

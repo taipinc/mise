@@ -13,42 +13,41 @@ async function init(): Promise<void> {
 
   const composition = result.data;
   console.log(
-    `Loaded composition: "${composition.meta.title || "(untitled)"}" — ${composition.elements.length} elements`
+    `[mise] Loaded: "${composition.meta.title || "(untitled)"}" — ${composition.elements.length} elements, viewBox ${composition.stage.viewBox.width}×${composition.stage.viewBox.height}`
   );
 
   const host = document.getElementById("mise-host");
   if (!host) {
-    console.error("Host element #mise-host not found");
+    console.error("[mise] Host element #mise-host not found");
     return;
   }
 
   const player = new MisePlayer(host, composition);
 
-  // Log clock events (throttle ticks to once per second)
   let lastLoggedSecond = -1;
   player.getClock().on("tick", (e) => {
     if (e.type !== "tick") return;
     const sec = Math.floor(e.time);
     if (sec !== lastLoggedSecond) {
       lastLoggedSecond = sec;
-      console.log(`[tick] ${e.time.toFixed(2)}s`);
+      console.log(`[tick] ${sec}s`);
     }
   });
 
   player.getClock().on("open", (e) => {
     if (e.type === "open") {
-      console.log(`[open] element "${e.elementId}" at ${e.time.toFixed(2)}s`);
+      console.log(`%c[open] "${e.elementId}" at ${e.time.toFixed(2)}s`, "color: #4CAF50; font-weight: bold");
     }
   });
 
   player.getClock().on("close", (e) => {
     if (e.type === "close") {
-      console.log(`[close] element "${e.elementId}" at ${e.time.toFixed(2)}s`);
+      console.log(`%c[close] "${e.elementId}" at ${e.time.toFixed(2)}s`, "color: #f44336; font-weight: bold");
     }
   });
 
   player.play();
-  console.log("Player started.");
+  console.log("[mise] Player started. Clock running.");
 }
 
 init();
