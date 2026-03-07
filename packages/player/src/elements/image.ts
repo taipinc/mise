@@ -41,7 +41,7 @@ export class ImageElement implements ElementRenderer {
     img.src = el.src ?? "";
     img.style.width = "100%";
     img.style.height = "100%";
-    img.style.objectFit = "cover";
+    img.style.objectFit = el.mediaFit === "fit" ? "contain" : "cover";
     img.style.display = "block";
     img.draggable = false;
 

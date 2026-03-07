@@ -95,7 +95,10 @@
       "animation": {
         "enter": "entering",
         "exit": "exiting"
-      }
+      },
+
+      "mediaFit": "fit | fill",
+      "_mediaFit_comment": "Controls how media fills its box. 'fit' = object-fit: contain (no crop, may letterbox). 'fill' = object-fit: cover (fills box, crops if needed). Never stretches. Default: 'fill'. Applies to image and video types only."
     }
   ]
 }

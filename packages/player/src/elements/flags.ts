@@ -23,6 +23,24 @@ function getMaxZIndex(stageRoot: HTMLDivElement): number {
   return max;
 }
 
+function getAspectRatio(wrapper: HTMLDivElement, element: MiseElement): number | null {
+  if (element.mediaFit !== "fit") return null;
+
+  if (element.type === "image") {
+    const img = wrapper.querySelector("img");
+    if (img && img.naturalWidth && img.naturalHeight) {
+      return img.naturalWidth / img.naturalHeight;
+    }
+  }
+
+  if (element.type === "video") {
+    // No reliable native dimensions from Vimeo, so use the element's authored size as the aspect ratio
+    return element.size.width / element.size.height;
+  }
+
+  return null;
+}
+
 export function applyFlags(
   wrapper: HTMLDivElement,
   element: MiseElement,
@@ -112,7 +130,7 @@ export function applyFlags(
   }
 
   if (flags.resizable) {
-    cleanups.push(applyResizable(wrapper, stageRoot, showControls, scheduleHide, pinControls, unpinControls));
+    cleanups.push(applyResizable(wrapper, element, stageRoot, showControls, scheduleHide, pinControls, unpinControls));
   }
 
   if (flags.closable && onClose) {
@@ -195,6 +213,7 @@ function applyMovable(
 
 function applyResizable(
   wrapper: HTMLDivElement,
+  element: MiseElement,
   stageRoot: HTMLDivElement,
   showControls: () => void,
   scheduleHide: () => void,
@@ -242,8 +261,18 @@ function applyResizable(
     const dx = e.clientX / scale - startX;
     const dy = e.clientY / scale - startY;
 
-    const newW = Math.max(MIN_WIDTH, origW + dx);
-    const newH = Math.max(MIN_HEIGHT, origH + dy);
+    let newW = Math.max(MIN_WIDTH, origW + dx);
+    let newH = Math.max(MIN_HEIGHT, origH + dy);
+
+    const aspectRatio = getAspectRatio(wrapper, element);
+    if (aspectRatio) {
+      // Lock to native aspect ratio — width leads
+      newH = newW / aspectRatio;
+      if (newH < MIN_HEIGHT) {
+        newH = MIN_HEIGHT;
+        newW = newH * aspectRatio;
+      }
+    }
 
     wrapper.style.width = `${newW}px`;
     wrapper.style.height = `${newH}px`;
