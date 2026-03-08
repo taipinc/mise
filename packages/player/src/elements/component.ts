@@ -29,13 +29,11 @@ export class ComponentElement implements ElementRenderer {
     const el = this.element;
 
     const wrapper = document.createElement("div");
-    wrapper.classList.add("mise-element");
-    wrapper.style.position = "absolute";
+    wrapper.classList.add("mise-element", "mise-type-component");
     wrapper.style.left = `${el.position.x}px`;
     wrapper.style.top = `${el.position.y}px`;
     wrapper.style.width = `${el.size.width}px`;
     wrapper.style.height = `${el.size.height}px`;
-    wrapper.style.overflow = "auto";
     wrapper.dataset.miseId = el.id;
 
     if (el.zIndex !== null) {
@@ -46,11 +44,14 @@ export class ComponentElement implements ElementRenderer {
       wrapper.classList.add(cls);
     }
 
+    const content = document.createElement("div");
+    content.classList.add("mise-content");
     if (el.content) {
-      wrapper.innerHTML = DOMPurify.sanitize(el.content, {
+      content.innerHTML = DOMPurify.sanitize(el.content, {
         ADD_ATTR: ["data-mise-action"],
       });
     }
+    wrapper.appendChild(content);
 
     // Wire up data-mise-action clicks
     wrapper.addEventListener("click", this.onWrapperClick);

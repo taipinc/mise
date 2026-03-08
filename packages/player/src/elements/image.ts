@@ -21,8 +21,7 @@ export class ImageElement implements ElementRenderer {
     const el = this.element;
 
     const wrapper = document.createElement("div");
-    wrapper.classList.add("mise-element");
-    wrapper.style.position = "absolute";
+    wrapper.classList.add("mise-element", "mise-type-image");
     wrapper.style.left = `${el.position.x}px`;
     wrapper.style.top = `${el.position.y}px`;
     wrapper.style.width = `${el.size.width}px`;
@@ -39,11 +38,7 @@ export class ImageElement implements ElementRenderer {
 
     const img = document.createElement("img");
     img.src = el.src ?? "";
-    img.style.width = "100%";
-    img.style.height = "100%";
     img.style.objectFit = el.mediaFit === "fit" ? "contain" : "cover";
-    img.style.display = "block";
-    img.draggable = false;
 
     wrapper.appendChild(img);
     this.stageRoot.appendChild(wrapper);

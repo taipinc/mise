@@ -1,4 +1,5 @@
 import type { MiseComposition } from "@mise/core";
+import defaultsCss from "./styles/defaults.css?raw";
 
 export class Stage {
   private readonly shadow: ShadowRoot;
@@ -17,86 +18,20 @@ export class Stage {
 
     this.shadow = host.attachShadow({ mode: "open" });
 
-    // Inject host-level styles + author styles
-    const styleEl = document.createElement("style");
-    styleEl.textContent = `
-      :host {
-        display: block;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        position: relative;
-      }
+    // 1. Inject baseline defaults (always first — author styles override)
+    const defaultsStyle = document.createElement("style");
+    defaultsStyle.textContent = defaultsCss;
+    this.shadow.appendChild(defaultsStyle);
+
+    // 2. Inject dynamic stage dimensions + author styles
+    const authorStyle = document.createElement("style");
+    authorStyle.textContent = `
       .mise-stage {
-        position: absolute;
         width: ${this.viewBoxWidth}px;
         height: ${this.viewBoxHeight}px;
-        transform-origin: top left;
-        overflow: hidden;
-      }
-      .mise-title-bar,
-      .mise-resize-handle {
-        opacity: 0;
-        transition: opacity 0.2s ease;
-      }
-      .mise-controls-visible .mise-title-bar,
-      .mise-controls-visible .mise-resize-handle {
-        opacity: 1;
-      }
-      .mise-playback-bar {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 20px;
-        background: rgba(0, 0, 0, 0.8);
-        display: flex;
-        align-items: center;
-        z-index: 99999;
-        opacity: 0;
-        transition: opacity 0.2s ease;
-      }
-      .mise-playback-bar-visible {
-        opacity: 1;
-      }
-      .mise-play-pause-btn {
-        width: 40px;
-        height: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        color: #fff;
-        font-size: 12px;
-        flex-shrink: 0;
-        user-select: none;
-      }
-      .mise-scrub-track {
-        flex: 1;
-        height: 100%;
-        position: relative;
-        cursor: pointer;
-      }
-      .mise-playhead {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 20px;
-        height: 20px;
-        background: rgba(160, 160, 160, 0.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-size: 11px;
-        cursor: grab;
-        user-select: none;
-      }
-      .mise-playhead:active {
-        cursor: grabbing;
       }
     ${styles}`;
-    this.shadow.appendChild(styleEl);
+    this.shadow.appendChild(authorStyle);
 
     this.stageDiv = document.createElement("div");
     this.stageDiv.classList.add("mise-stage");

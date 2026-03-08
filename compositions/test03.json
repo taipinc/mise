@@ -1,0 +1,202 @@
+{
+  "version": "0.1",
+
+  "meta": {
+    "title": "Test 03 — Baseline Defaults Only",
+    "author": "Mise Dev",
+    "description": "Same elements as test02, but with no author CSS except keyframe animations. Verifies the baseline stylesheet.",
+    "created": "2026-03-07",
+    "modified": "2026-03-07"
+  },
+
+  "stage": {
+    "viewBox": { "width": 1920, "height": 1080 },
+    "scaling": true,
+    "background": "",
+    "poster": "",
+    "styles": ".entering { animation: fadeIn 0.5s ease forwards; } .exiting { animation: fadeOut 0.5s ease forwards; } @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } @keyframes fadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.95); } } .slide-in { animation: slideIn 0.6s ease forwards; } .slide-out { animation: slideOut 0.6s ease forwards; } @keyframes slideIn { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } } @keyframes slideOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }",
+    "playback": {
+      "duration": null,
+      "loop": false,
+      "sync": {
+        "withClock": true
+      }
+    },
+
+    "playbackBar": {
+      "visible": true,
+      "interactive": true,
+      "classNames": []
+    }
+  },
+
+  "elements": [
+    {
+      "id": "bg-image",
+      "type": "image",
+      "src": "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=1920&q=80",
+      "content": null,
+      "open": { "mode": "cue", "at": 0.0 },
+      "close": { "mode": "none", "at": null },
+      "persistOnLoop": false,
+      "position": { "x": 0, "y": 0 },
+      "size": { "width": 1920, "height": 1080 },
+      "zIndex": null,
+      "background": true,
+      "classNames": [],
+      "flags": {
+        "movable": false,
+        "resizable": false,
+        "closable": false,
+        "zIndexable": false
+      },
+      "animation": { "enter": "entering", "exit": "exiting" },
+      "mediaFit": "fill"
+    },
+    {
+      "id": "text01",
+      "type": "text",
+      "src": null,
+      "content": "<h2>Welcome to Mise</h2><p>An interactive timeline composition platform. This text element appeared at 2 seconds.</p>",
+      "open": { "mode": "cue", "at": 2.0 },
+      "close": { "mode": "cue", "at": 30.0 },
+      "persistOnLoop": false,
+      "position": { "x": 100, "y": 100 },
+      "size": { "width": 500, "height": 200 },
+      "zIndex": null,
+      "background": false,
+      "classNames": [],
+      "flags": {
+        "movable": true,
+        "resizable": true,
+        "closable": true,
+        "zIndexable": true
+      },
+      "animation": { "enter": "slide-in", "exit": "slide-out" }
+    },
+    {
+      "id": "image01",
+      "type": "image",
+      "src": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=640&q=80",
+      "content": null,
+      "open": { "mode": "cue", "at": 5.0 },
+      "close": { "mode": "userClose", "at": null },
+      "persistOnLoop": false,
+      "position": { "x": 1100, "y": 80 },
+      "size": { "width": 640, "height": 400 },
+      "zIndex": null,
+      "background": false,
+      "classNames": [],
+      "flags": {
+        "movable": true,
+        "resizable": true,
+        "closable": true,
+        "zIndexable": true
+      },
+      "animation": { "enter": "entering", "exit": "exiting" },
+      "mediaFit": "fit"
+    },
+    {
+      "id": "component01",
+      "type": "component",
+      "src": null,
+      "content": "<div><strong>Interactive Component</strong><br><br>Click to <span data-mise-action='open:text02'>show hidden text</span>.<br><br>This element has <code>data-mise-action</code> links that trigger other elements.</div>",
+      "open": { "mode": "cue", "at": 8.0 },
+      "close": { "mode": "none", "at": null },
+      "persistOnLoop": false,
+      "position": { "x": 100, "y": 600 },
+      "size": { "width": 400, "height": 180 },
+      "zIndex": null,
+      "background": false,
+      "classNames": [],
+      "flags": {
+        "movable": true,
+        "resizable": false,
+        "closable": true,
+        "zIndexable": true
+      },
+      "animation": { "enter": "entering", "exit": "exiting" }
+    },
+    {
+      "id": "text02",
+      "type": "text",
+      "src": null,
+      "content": "<h2>Linked Element</h2><p>This text was opened via a <code>data-mise-action</code> link from the component element!</p>",
+      "open": { "mode": "link", "at": 0.0 },
+      "close": { "mode": "userClose", "at": null },
+      "persistOnLoop": false,
+      "position": { "x": 600, "y": 600 },
+      "size": { "width": 400, "height": 160 },
+      "zIndex": null,
+      "background": false,
+      "classNames": [],
+      "flags": {
+        "movable": true,
+        "resizable": true,
+        "closable": true,
+        "zIndexable": true
+      },
+      "animation": { "enter": "slide-in", "exit": "slide-out" }
+    },
+    {
+      "id": "video01",
+      "type": "video",
+      "src": "https://vimeo.com/1161489532",
+      "content": null,
+      "open": { "mode": "cue", "at": 4.0 },
+      "close": { "mode": "none", "at": null },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "playing",
+        "loop": true,
+        "syncWithClock": false,
+        "audienceControl": false,
+        "bar": { "visible": false, "classNames": [] }
+      },
+      "audio": { "initial": "off", "audienceControl": false },
+      "position": { "x": 1100, "y": 550 },
+      "size": { "width": 640, "height": 360 },
+      "zIndex": null,
+      "background": false,
+      "classNames": [],
+      "flags": {
+        "movable": true,
+        "resizable": true,
+        "closable": true,
+        "zIndexable": true
+      },
+      "animation": { "enter": "entering", "exit": "exiting" },
+      "mediaFit": "fill"
+    },
+    {
+      "id": "video02",
+      "type": "video",
+      "src": "https://vimeo.com/1161479294",
+      "content": null,
+      "open": { "mode": "cue", "at": 6.0 },
+      "close": { "mode": "none", "at": null },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "playing",
+        "loop": true,
+        "syncWithClock": true,
+        "audienceControl": false,
+        "bar": { "visible": false, "classNames": [] }
+      },
+      "audio": { "initial": "off", "audienceControl": false },
+      "position": { "x": 100, "y": 380 },
+      "size": { "width": 500, "height": 280 },
+      "zIndex": null,
+      "background": false,
+      "classNames": [],
+      "flags": {
+        "movable": true,
+        "resizable": true,
+        "closable": true,
+        "zIndexable": true
+      },
+      "animation": { "enter": "entering", "exit": "exiting" },
+      "mediaFit": "fit"
+    }
+  ]
+}

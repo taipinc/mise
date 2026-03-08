@@ -22,13 +22,11 @@ export class TextElement implements ElementRenderer {
     const el = this.element;
 
     const wrapper = document.createElement("div");
-    wrapper.classList.add("mise-element");
-    wrapper.style.position = "absolute";
+    wrapper.classList.add("mise-element", "mise-type-text");
     wrapper.style.left = `${el.position.x}px`;
     wrapper.style.top = `${el.position.y}px`;
     wrapper.style.width = `${el.size.width}px`;
     wrapper.style.height = `${el.size.height}px`;
-    wrapper.style.overflow = "auto";
     wrapper.dataset.miseId = el.id;
 
     if (el.zIndex !== null) {
@@ -39,9 +37,12 @@ export class TextElement implements ElementRenderer {
       wrapper.classList.add(cls);
     }
 
+    const content = document.createElement("div");
+    content.classList.add("mise-content");
     if (el.content) {
-      wrapper.innerHTML = DOMPurify.sanitize(el.content);
+      content.innerHTML = DOMPurify.sanitize(el.content);
     }
+    wrapper.appendChild(content);
 
     this.stageRoot.appendChild(wrapper);
     this.wrapper = wrapper;
