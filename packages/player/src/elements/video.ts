@@ -1,8 +1,17 @@
 import type { MiseElement } from "@mise/core";
-import Player from "@vimeo/player";
+import VimeoPlayer from "@vimeo/player";
 import type { ElementRenderer } from "./renderer";
 import { applyFlags, type FlagsCleanup } from "./flags";
 import { applyAnimation } from "./animation";
+
+// --- Provider detection ---
+
+type VideoProvider = "vimeo" | "youtube";
+
+function detectProvider(src: string): VideoProvider {
+  if (/youtube\.com|youtu\.be/i.test(src)) return "youtube";
+  return "vimeo";
+}
 
 function extractVimeoId(src: string): string {
   const match = src.match(/(\d+)\s*$/);
@@ -12,34 +21,102 @@ function extractVimeoId(src: string): string {
   return match[1];
 }
 
-const ASSUMED_VIDEO_ASPECT = 16 / 9;
+function extractYouTubeId(src: string): string {
+  // youtube.com/watch?v=ID, youtu.be/ID, youtube.com/embed/ID
+  let match = src.match(/[?&]v=([^&#]+)/);
+  if (match) return match[1];
+  match = src.match(/youtu\.be\/([^?&#]+)/);
+  if (match) return match[1];
+  match = src.match(/\/embed\/([^?&#]+)/);
+  if (match) return match[1];
+  throw new Error(`Cannot extract YouTube ID from: ${src}`);
+}
 
-function applyCoverSize(iframe: HTMLIFrameElement, containerW: number, containerH: number): void {
-  const containerAspect = containerW / containerH;
-  let iframeW: number;
-  let iframeH: number;
+// --- YouTube IFrame API loader (singleton) ---
 
-  if (containerAspect > ASSUMED_VIDEO_ASPECT) {
-    // Container is wider than video — match width, overflow height
-    iframeW = containerW;
-    iframeH = containerW / ASSUMED_VIDEO_ASPECT;
-  } else {
-    // Container is taller than video — match height, overflow width
-    iframeH = containerH;
-    iframeW = containerH * ASSUMED_VIDEO_ASPECT;
+interface YTPlayerInstance {
+  playVideo(): void;
+  pauseVideo(): void;
+  seekTo(seconds: number, allowSeekAhead: boolean): void;
+  mute(): void;
+  unMute(): void;
+  getIframe(): HTMLIFrameElement;
+  destroy(): void;
+}
+
+interface YTPlayerConstructor {
+  new (element: HTMLElement, options: {
+    videoId: string;
+    width?: number;
+    height?: number;
+    playerVars?: Record<string, number | string>;
+    events?: {
+      onReady?: (event: { target: YTPlayerInstance }) => void;
+      onStateChange?: (event: { data: number }) => void;
+    };
+  }): YTPlayerInstance;
+}
+
+declare global {
+  interface Window {
+    YT?: { Player: YTPlayerConstructor };
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
+
+let ytApiPromise: Promise<void> | null = null;
+
+function loadYouTubeAPI(): Promise<void> {
+  if (ytApiPromise) return ytApiPromise;
+  if (window.YT?.Player) {
+    ytApiPromise = Promise.resolve();
+    return ytApiPromise;
   }
 
-  iframe.style.width = `${iframeW}px`;
-  iframe.style.height = `${iframeH}px`;
+  ytApiPromise = new Promise<void>((resolve) => {
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      prev?.();
+      resolve();
+    };
+    const script = document.createElement("script");
+    script.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(script);
+  });
+  return ytApiPromise;
 }
+
+// --- Shared cover-size helper ---
+
+const ASSUMED_VIDEO_ASPECT = 16 / 9;
+
+function applyCoverSize(el: HTMLElement, containerW: number, containerH: number): void {
+  const containerAspect = containerW / containerH;
+  let w: number;
+  let h: number;
+
+  if (containerAspect > ASSUMED_VIDEO_ASPECT) {
+    w = containerW;
+    h = containerW / ASSUMED_VIDEO_ASPECT;
+  } else {
+    h = containerH;
+    w = containerH * ASSUMED_VIDEO_ASPECT;
+  }
+
+  el.style.width = `${w}px`;
+  el.style.height = `${h}px`;
+}
+
+// --- VideoElement ---
 
 export class VideoElement implements ElementRenderer {
   private readonly element: MiseElement;
   private readonly stageRoot: HTMLDivElement;
   private readonly onCloseCallback: (() => void) | null;
   private wrapper: HTMLDivElement | null = null;
-  private iframe: HTMLIFrameElement | null = null;
-  private vimeoPlayer: Player | null = null;
+  private vimeoPlayer: VimeoPlayer | null = null;
+  private ytPlayer: YTPlayerInstance | null = null;
+  private provider: VideoProvider = "vimeo";
   private flagsCleanup: FlagsCleanup | null = null;
   private resizeObserver: ResizeObserver | null = null;
   readonly syncWithClock: boolean;
@@ -53,26 +130,12 @@ export class VideoElement implements ElementRenderer {
 
   mount(): void {
     const el = this.element;
-    const videoId = extractVimeoId(el.src ?? "");
+    this.provider = detectProvider(el.src ?? "");
 
     const wantsAutoplay = el.playback?.initial === "playing";
     const wantsMuted = el.audio?.initial === "off";
 
-    const params = new URLSearchParams();
-    if (wantsAutoplay) {
-      params.set("autoplay", "1");
-    }
-    // Browsers block unmuted autoplay — start muted to guarantee playback starts
-    if (wantsAutoplay || wantsMuted) {
-      params.set("muted", "1");
-    }
-    if (el.playback?.loop) {
-      params.set("loop", "1");
-    }
-    params.set("controls", el.playback?.audienceControl ? "1" : "0");
-    params.set("autopause", "0");
-
-    // Wrapper div holds the iframe + flag UI (close btn, resize handle)
+    // Shared wrapper + body + clipContainer
     const wrapper = document.createElement("div");
     wrapper.classList.add("mise-element", "mise-type-video");
     wrapper.style.left = `${el.position.x}px`;
@@ -91,27 +154,58 @@ export class VideoElement implements ElementRenderer {
       body.classList.add(cls);
     }
 
-    // Clip container for mediaFit — iframe can't receive object-fit directly
     const clipContainer = document.createElement("div");
     clipContainer.classList.add("mise-video-clip");
+
+    body.appendChild(clipContainer);
+    wrapper.appendChild(body);
+    this.stageRoot.appendChild(wrapper);
+    this.wrapper = wrapper;
+
+    applyAnimation(wrapper, el.animation.enter);
+
+    this.flagsCleanup = applyFlags(wrapper, el, this.stageRoot, () => {
+      this.unmount();
+      this.onCloseCallback?.();
+    });
+
+    if (this.provider === "vimeo") {
+      this.mountVimeo(clipContainer, el, wantsAutoplay, wantsMuted, wrapper);
+    } else {
+      this.mountYouTube(clipContainer, el, wantsAutoplay, wantsMuted, wrapper);
+    }
+  }
+
+  private mountVimeo(
+    clipContainer: HTMLDivElement,
+    el: MiseElement,
+    wantsAutoplay: boolean,
+    wantsMuted: boolean,
+    wrapper: HTMLDivElement
+  ): void {
+    const videoId = extractVimeoId(el.src ?? "");
+
+    const params = new URLSearchParams();
+    if (wantsAutoplay) params.set("autoplay", "1");
+    if (wantsAutoplay || wantsMuted) params.set("muted", "1");
+    if (el.playback?.loop) params.set("loop", "1");
+    params.set("controls", el.playback?.audienceControl ? "1" : "0");
+    params.set("autopause", "0");
 
     const iframe = document.createElement("iframe");
     iframe.src = `https://player.vimeo.com/video/${videoId}?${params.toString()}`;
     iframe.setAttribute("allow", "autoplay; fullscreen");
 
     if (el.mediaFit === "fit") {
-      // Contain: iframe fits within the box, no crop
       iframe.style.width = "100%";
       iframe.style.height = "100%";
     } else {
-      // Cover (default): iframe sized to cover container, centered and clipped
       iframe.style.position = "absolute";
       iframe.style.top = "50%";
       iframe.style.left = "50%";
       iframe.style.transform = "translate(-50%, -50%)";
       applyCoverSize(iframe, el.size.width, el.size.height);
 
-      // Recompute on resize (user drag-resize)
       this.resizeObserver = new ResizeObserver((entries) => {
         for (const entry of entries) {
           applyCoverSize(iframe, entry.contentRect.width, entry.contentRect.height);
@@ -121,32 +215,14 @@ export class VideoElement implements ElementRenderer {
     }
 
     clipContainer.appendChild(iframe);
-    body.appendChild(clipContainer);
-    wrapper.appendChild(body);
-    this.stageRoot.appendChild(wrapper);
-    this.wrapper = wrapper;
-    this.iframe = iframe;
 
-    applyAnimation(wrapper, el.animation.enter);
-
-    this.flagsCleanup = applyFlags(wrapper, el, this.stageRoot, () => {
-      this.unmount();
-      this.onCloseCallback?.();
-    });
-
-    const player = new Player(iframe);
+    const player = new VimeoPlayer(iframe);
     this.vimeoPlayer = player;
 
     player.ready().then(async () => {
-      if (wantsAutoplay) {
-        player.play().catch(() => {});
-      }
-      if (!wantsMuted) {
-        player.setMuted(false).catch(() => {});
-      }
+      if (wantsAutoplay) player.play().catch(() => {});
+      if (!wantsMuted) player.setMuted(false).catch(() => {});
 
-      // For "fit" mode, shrink wrapper to the video's native aspect ratio
-      // so controls match the visible video area (no letterbox padding)
       if (el.mediaFit === "fit" && wrapper) {
         try {
           const [nativeW, nativeH] = await Promise.all([
@@ -162,11 +238,9 @@ export class VideoElement implements ElementRenderer {
             let fitW: number;
             let fitH: number;
             if (videoAspect > boxAspect) {
-              // Video is wider — width-limited
               fitW = boxW;
               fitH = boxW / videoAspect;
             } else {
-              // Video is taller — height-limited
               fitH = boxH;
               fitW = boxH * videoAspect;
             }
@@ -181,6 +255,100 @@ export class VideoElement implements ElementRenderer {
     }).catch(() => {});
   }
 
+  private mountYouTube(
+    clipContainer: HTMLDivElement,
+    el: MiseElement,
+    wantsAutoplay: boolean,
+    wantsMuted: boolean,
+    wrapper: HTMLDivElement
+  ): void {
+    const videoId = extractYouTubeId(el.src ?? "");
+
+    // YouTube API needs a placeholder div to replace with an iframe
+    const placeholder = document.createElement("div");
+    clipContainer.appendChild(placeholder);
+
+    loadYouTubeAPI().then(() => {
+      if (!this.wrapper) return; // unmounted before API loaded
+
+      const playerVars: Record<string, number | string> = {
+        autoplay: wantsAutoplay ? 1 : 0,
+        controls: el.playback?.audienceControl ? 1 : 0,
+        loop: el.playback?.loop ? 1 : 0,
+        modestbranding: 1,
+        rel: 0,
+        playsinline: 1,
+        iv_load_policy: 3,   // hide annotations
+        fs: 0,               // hide fullscreen button
+        disablekb: 1,        // disable keyboard controls
+      };
+
+      if (el.playback?.loop) {
+        // YouTube loop requires playlist set to the video ID
+        playerVars.playlist = videoId;
+      }
+
+      const ytPlayer = new window.YT!.Player(placeholder, {
+        videoId,
+        width: el.size.width,
+        height: el.size.height,
+        playerVars,
+        events: {
+          onReady: (event) => {
+            if (wantsAutoplay || wantsMuted) {
+              event.target.mute();
+            }
+
+            // Apply cover/fit sizing to the YouTube iframe
+            const iframe = event.target.getIframe();
+            if (el.mediaFit === "fit") {
+              iframe.style.width = "100%";
+              iframe.style.height = "100%";
+
+              // Shrink wrapper to assumed 16:9 aspect ratio for fit mode
+              const videoAspect = ASSUMED_VIDEO_ASPECT;
+              const boxW = el.size.width;
+              const boxH = el.size.height;
+              const boxAspect = boxW / boxH;
+
+              let fitW: number;
+              let fitH: number;
+              if (videoAspect > boxAspect) {
+                fitW = boxW;
+                fitH = boxW / videoAspect;
+              } else {
+                fitH = boxH;
+                fitW = boxH * videoAspect;
+              }
+
+              wrapper.style.width = `${fitW}px`;
+              wrapper.style.height = `${fitH}px`;
+            } else {
+              iframe.style.position = "absolute";
+              iframe.style.top = "50%";
+              iframe.style.left = "50%";
+              iframe.style.transform = "translate(-50%, -50%)";
+              applyCoverSize(iframe, el.size.width, el.size.height);
+
+              this.resizeObserver = new ResizeObserver((entries) => {
+                for (const entry of entries) {
+                  applyCoverSize(iframe, entry.contentRect.width, entry.contentRect.height);
+                }
+              });
+              this.resizeObserver.observe(clipContainer);
+            }
+
+            if (!wantsMuted) {
+              event.target.unMute();
+            }
+          },
+        },
+      });
+
+      this.ytPlayer = ytPlayer;
+    }).catch(() => {});
+  }
+
   unmount(): void {
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
@@ -190,34 +358,54 @@ export class VideoElement implements ElementRenderer {
       this.flagsCleanup.destroy();
       this.flagsCleanup = null;
     }
+
     const vp = this.vimeoPlayer;
     this.vimeoPlayer = null;
+    const ytp = this.ytPlayer;
+    this.ytPlayer = null;
+
     if (this.wrapper) {
       applyAnimation(this.wrapper, this.element.animation.exit, () => {
-        if (vp) {
-          vp.destroy().catch(() => {});
+        if (vp) vp.destroy().catch(() => {});
+        if (ytp) {
+          try { ytp.destroy(); } catch { /* ignore */ }
         }
         this.wrapper?.remove();
         this.wrapper = null;
-        this.iframe = null;
       });
-    } else if (vp) {
-      vp.destroy().catch(() => {});
+    } else {
+      if (vp) vp.destroy().catch(() => {});
+      if (ytp) {
+        try { ytp.destroy(); } catch { /* ignore */ }
+      }
     }
   }
 
   seek(elementTime: number): void {
-    if (!this.syncWithClock || !this.vimeoPlayer) return;
-    this.vimeoPlayer.setCurrentTime(Math.max(0, elementTime)).catch(() => {});
+    if (!this.syncWithClock) return;
+    const time = Math.max(0, elementTime);
+    if (this.vimeoPlayer) {
+      this.vimeoPlayer.setCurrentTime(time).catch(() => {});
+    } else if (this.ytPlayer) {
+      this.ytPlayer.seekTo(time, true);
+    }
   }
 
   pause(): void {
-    if (!this.syncWithClock || !this.vimeoPlayer) return;
-    this.vimeoPlayer.pause().catch(() => {});
+    if (!this.syncWithClock) return;
+    if (this.vimeoPlayer) {
+      this.vimeoPlayer.pause().catch(() => {});
+    } else if (this.ytPlayer) {
+      this.ytPlayer.pauseVideo();
+    }
   }
 
   resume(): void {
-    if (!this.syncWithClock || !this.vimeoPlayer) return;
-    this.vimeoPlayer.play().catch(() => {});
+    if (!this.syncWithClock) return;
+    if (this.vimeoPlayer) {
+      this.vimeoPlayer.play().catch(() => {});
+    } else if (this.ytPlayer) {
+      this.ytPlayer.playVideo();
+    }
   }
 }

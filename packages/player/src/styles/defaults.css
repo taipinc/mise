@@ -78,6 +78,7 @@
 .mise-video-clip iframe {
   border: none;
   display: block;
+  pointer-events: none;
 }
 
 /* --- Title bar (drag handle) --- */

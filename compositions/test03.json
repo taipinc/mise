@@ -197,6 +197,36 @@
       },
       "animation": { "enter": "entering", "exit": "exiting" },
       "mediaFit": "fit"
+    },
+    {
+      "id": "youtube01",
+      "type": "video",
+      "src": "https://www.youtube.com/watch?v=p5Aiyq3WT10",
+      "content": null,
+      "open": { "mode": "cue", "at": 2.0 },
+      "close": { "mode": "none", "at": null },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "playing",
+        "loop": false,
+        "syncWithClock": true,
+        "audienceControl": false,
+        "bar": { "visible": false, "classNames": [] }
+      },
+      "audio": { "initial": "off", "audienceControl": false },
+      "position": { "x": 680, "y": 300 },
+      "size": { "width": 560, "height": 315 },
+      "zIndex": null,
+      "background": false,
+      "classNames": ["rounded-frame"],
+      "flags": {
+        "movable": true,
+        "resizable": true,
+        "closable": true,
+        "zIndexable": true
+      },
+      "animation": { "enter": "entering", "exit": "exiting" },
+      "mediaFit": "fill"
     }
   ]
 }
