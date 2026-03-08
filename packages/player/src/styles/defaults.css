@@ -337,3 +337,17 @@
 .mise-playhead:active {
   cursor: grabbing;
 }
+
+/* --- Time displays --- */
+
+.mise-time-current,
+.mise-time-total {
+  color: rgba(255, 255, 255, 0.7);
+  font-family: system-ui, sans-serif;
+  font-size: 11px;
+  line-height: 20px;
+  padding: 0 6px;
+  white-space: nowrap;
+  user-select: none;
+  flex-shrink: 0;
+}

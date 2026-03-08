@@ -1,6 +1,7 @@
 # Mise — TODO
 
 - [ ] Overhaul default css styling.
+- [ ] Should synced videos, keep updating after completing their first loop? 
 
 ## Video Element
 - Remove default Vimeo controls (use `controls=0` in embed, rely on SDK for programmatic control)

@@ -22,6 +22,10 @@ export const PlaybackBarSchema = z
     visible: z.boolean(),
     interactive: z.boolean(),
     classNames: z.array(z.string()),
+    showCurrentTime: z.boolean().default(false),
+    showTotalTime: z.boolean().default(false),
+    timeCurrentClassNames: z.array(z.string()).default([]),
+    timeTotalClassNames: z.array(z.string()).default([]),
   })
   .passthrough();
 
