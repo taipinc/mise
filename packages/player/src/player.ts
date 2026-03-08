@@ -147,13 +147,22 @@ export class MisePlayer {
     renderer.mount();
     this.mountedElements.set(elementId, renderer);
 
-    // Background pinning: force z-index 0, prevent zIndexable from raising
-    if (el.background) {
-      const wrapper = this.stage.root.querySelector(
-        `[data-mise-id="${elementId}"]`
-      ) as HTMLElement | null;
-      if (wrapper) {
+    const wrapper = this.stage.root.querySelector(
+      `[data-mise-id="${elementId}"]`
+    ) as HTMLElement | null;
+
+    if (wrapper) {
+      if (el.background) {
+        // Background pinning: force z-index 0, prevent zIndexable from raising
         wrapper.style.zIndex = "0";
+      } else if (el.zIndex === null) {
+        // Auto z-index: place above all currently visible elements
+        let max = 0;
+        for (const child of this.stage.root.children) {
+          const z = parseInt((child as HTMLElement).style.zIndex || "0", 10);
+          if (z > max) max = z;
+        }
+        wrapper.style.zIndex = String(max + 1);
       }
     }
   }
