@@ -33,8 +33,10 @@ export class TextElement implements ElementRenderer {
       wrapper.style.zIndex = String(el.zIndex);
     }
 
+    const body = document.createElement("div");
+    body.classList.add("mise-body");
     for (const cls of el.classNames) {
-      wrapper.classList.add(cls);
+      body.classList.add(cls);
     }
 
     const content = document.createElement("div");
@@ -42,7 +44,8 @@ export class TextElement implements ElementRenderer {
     if (el.content) {
       content.innerHTML = DOMPurify.sanitize(el.content);
     }
-    wrapper.appendChild(content);
+    body.appendChild(content);
+    wrapper.appendChild(body);
 
     this.stageRoot.appendChild(wrapper);
     this.wrapper = wrapper;

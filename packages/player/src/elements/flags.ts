@@ -34,8 +34,11 @@ function getAspectRatio(wrapper: HTMLDivElement, element: MiseElement): number |
   }
 
   if (element.type === "video") {
-    // No reliable native dimensions from Vimeo, so use the element's authored size as the aspect ratio
-    return element.size.width / element.size.height;
+    // Use the wrapper's current dimensions — these are adjusted to the native
+    // video aspect ratio by VideoElement once the player is ready
+    const w = parseFloat(wrapper.style.width) || element.size.width;
+    const h = parseFloat(wrapper.style.height) || element.size.height;
+    return w / h;
   }
 
   return null;

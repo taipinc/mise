@@ -32,15 +32,18 @@ export class ImageElement implements ElementRenderer {
       wrapper.style.zIndex = String(el.zIndex);
     }
 
+    const body = document.createElement("div");
+    body.classList.add("mise-body");
     for (const cls of el.classNames) {
-      wrapper.classList.add(cls);
+      body.classList.add(cls);
     }
 
     const img = document.createElement("img");
     img.src = el.src ?? "";
     img.style.objectFit = el.mediaFit === "fit" ? "contain" : "cover";
 
-    wrapper.appendChild(img);
+    body.appendChild(img);
+    wrapper.appendChild(body);
     this.stageRoot.appendChild(wrapper);
     this.wrapper = wrapper;
 
@@ -50,6 +53,37 @@ export class ImageElement implements ElementRenderer {
       this.unmount();
       this.onCloseCallback?.();
     });
+
+    // For "fit" mode, shrink wrapper to the image's native aspect ratio
+    // so controls match the visible image area (no letterbox padding)
+    if (el.mediaFit === "fit") {
+      const adjustToFit = (): void => {
+        if (!img.naturalWidth || !img.naturalHeight) return;
+        const imageAspect = img.naturalWidth / img.naturalHeight;
+        const boxW = el.size.width;
+        const boxH = el.size.height;
+        const boxAspect = boxW / boxH;
+
+        let fitW: number;
+        let fitH: number;
+        if (imageAspect > boxAspect) {
+          fitW = boxW;
+          fitH = boxW / imageAspect;
+        } else {
+          fitH = boxH;
+          fitW = boxH * imageAspect;
+        }
+
+        wrapper.style.width = `${fitW}px`;
+        wrapper.style.height = `${fitH}px`;
+      };
+
+      if (img.complete && img.naturalWidth) {
+        adjustToFit();
+      } else {
+        img.addEventListener("load", adjustToFit, { once: true });
+      }
+    }
   }
 
   unmount(): void {
