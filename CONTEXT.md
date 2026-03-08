@@ -205,16 +205,16 @@ A composition with multiple video elements (each with `muted` toggled differentl
 - [x] Implement element `background: true` z-index pinning
 - [x] Render the Playback Bar (visible, interactive properties)
 - [x] Basic README and schema documentation (`SCHEMA.md`)
+- [x] Implement full CSS style block with Shadow DOM injection
+- [ ] Style the Playback Bar via CSS `classNames`
+- [ ] Style the default video/audio controls via CSS `classNames`
+- [ ] Build and test audio elements with Tone.js
+- [ ] Support for additional video and audio providers (YouTube, direct URLs)
 
 ### Phase 2 — Graphics & Styling
 
 **Goal:** Full CSS authoring support and graphic element type.
 
-- [-] Add `graphic` element type (SVG-based) (pushed for later consideration)
-- [?] Implement full CSS style block with Shadow DOM injection (Need to understand what this is?)
-- [-] Style the Playback Bar via CSS (already styled, but should be revisited with a proper design)
-- [-] Develop the OS desktop aesthetic as a reference CSS theme (pushed for later consideration)
-- [-] Publish community CSS theme format spec (pushed for later consideration)
 
 ### Phase 3 — Minimal Editor
 
@@ -234,9 +234,7 @@ A composition with multiple video elements (each with `muted` toggled differentl
 
 - [x] Design element link schema (trigger → target element ID)
 - [x] Implement link-triggered element opening in the player
-- [?] Audience input handlers: click, hover, keypress (already implemented?)
-- [ ] State variables in project JSON (what is this?)
-- [-] Branching Clock support (jump to timestamp on event) (calcelled for later consideration)
+- [ ] State variables in project JSON
 - [ ] Conditional element visibility
 
 ### Phase 5 — Platform & Community
@@ -247,6 +245,14 @@ A composition with multiple video elements (each with `muted` toggled differentl
 - [ ] Self-hosting guide
 - [ ] Hosted platform (no media storage — authors link to Vimeo, CDN, etc.)
 - [ ] `CONTRIBUTING.md` and plugin/theme ecosystem
+
+### For Reconsideration in Future Phases
+
+- [ ] Audience input handlers: hover, keypress
+- [ ] Branching Clock support (jump to timestamp on event) (calcelled for later consideration)
+- [ ] Develop the OS desktop aesthetic as a reference CSS theme (pushed for later consideration)
+- [ ] Publish community CSS theme format spec (pushed for later consideration)
+- [ ] Add `graphic` element type (SVG-based) (pushed for later consideration)
 
 ---
 
