@@ -211,12 +211,7 @@ A composition with multiple video elements (each with `muted` toggled differentl
 - [ ] Build and test audio elements with Tone.js
 - [ ] Support for additional video and audio providers (YouTube, direct URLs)
 
-### Phase 2 — Graphics & Styling
-
-**Goal:** Full CSS authoring support and graphic element type.
-
-
-### Phase 3 — Minimal Editor
+### Phase 2 — Minimal Editor
 
 **Goal:** A usable authoring tool that writes valid project JSON.
 
@@ -228,7 +223,7 @@ A composition with multiple video elements (each with `muted` toggled differentl
 - [ ] Visual CSS property shortcuts (background, border, font, etc.)
 - [ ] Asset management (link to external URLs — no upload)
 
-### Phase 4 — Interactivity & Links
+### Phase 3 — Interactivity & Links
 
 **Goal:** Elements can respond to audience input and trigger the Clock or other elements.
 
@@ -237,7 +232,7 @@ A composition with multiple video elements (each with `muted` toggled differentl
 - [ ] State variables in project JSON
 - [ ] Conditional element visibility
 
-### Phase 5 — Platform & Community
+### Phase 4 — Platform & Community
 
 **Goal:** Self-hostable and publicly accessible.
 
