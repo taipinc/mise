@@ -1,9 +1,6 @@
 import type { Clock, MiseComposition } from "@mise/core";
 
-const BAR_HEIGHT = 20;
-const PLAYHEAD_SIZE = 20;
-const PLAY_BTN_WIDTH = 40;
-const HOVER_ZONE = 60;
+const HOVER_MARGIN = 40;
 
 function computeHorizon(composition: MiseComposition): number {
   if (composition.stage.playback.duration !== null) {
@@ -57,6 +54,9 @@ export class PlaybackBar {
     // Build DOM
     this.barEl = document.createElement("div");
     this.barEl.classList.add("mise-playback-bar");
+    for (const cls of composition.stage.playbackBar.classNames) {
+      this.barEl.classList.add(cls);
+    }
 
     this.playPauseBtn = document.createElement("div");
     this.playPauseBtn.classList.add("mise-play-pause-btn");
@@ -134,14 +134,15 @@ export class PlaybackBar {
 
   private updatePlayhead(time: number): void {
     const trackWidth = this.scrubTrack.offsetWidth;
+    const playheadWidth = this.playhead.offsetWidth || 20;
     if (this.horizon <= 0 || trackWidth <= 0) return;
 
     if (time >= this.horizon) {
-      this.playhead.style.left = `${trackWidth - PLAYHEAD_SIZE}px`;
+      this.playhead.style.left = `${trackWidth - playheadWidth}px`;
       this.playhead.textContent = "\u221E";
     } else {
       const ratio = time / this.horizon;
-      const maxLeft = trackWidth - PLAYHEAD_SIZE;
+      const maxLeft = trackWidth - playheadWidth;
       this.playhead.style.left = `${ratio * maxLeft}px`;
       this.playhead.textContent = "";
     }
@@ -191,19 +192,26 @@ export class PlaybackBar {
     const rect = this.scrubTrack.getBoundingClientRect();
     const scale = rect.width / this.scrubTrack.offsetWidth;
     const trackWidth = this.scrubTrack.offsetWidth;
+    const playheadWidth = this.playhead.offsetWidth || 20;
     const x = (e.clientX - rect.left) / scale;
-    const ratio = Math.max(0, Math.min(1, x / (trackWidth - PLAYHEAD_SIZE)));
+    const ratio = Math.max(0, Math.min(1, x / (trackWidth - playheadWidth)));
     return ratio * this.horizon;
   }
 
   // --- Hover show/hide ---
 
   private onStagePointerMove = (e: PointerEvent): void => {
-    const rect = this.stageRoot.getBoundingClientRect();
-    const scale = rect.width / this.stageRoot.offsetWidth;
-    const stageY = (e.clientY - rect.top) / scale;
+    const stageRect = this.stageRoot.getBoundingClientRect();
+    const scale = stageRect.width / this.stageRoot.offsetWidth;
+    const stageY = (e.clientY - stageRect.top) / scale;
 
-    const shouldShow = stageY >= this.stageHeight - HOVER_ZONE;
+    // Derive hover zone from the bar's actual rendered position and height
+    const barTop = this.barEl.offsetTop;
+    const barHeight = this.barEl.offsetHeight;
+    const hoverStart = barTop - HOVER_MARGIN;
+    const hoverEnd = barTop + barHeight;
+
+    const shouldShow = stageY >= hoverStart && stageY <= hoverEnd;
     if (shouldShow && !this.barVisible) {
       this.barVisible = true;
       this.barEl.classList.add("mise-playback-bar-visible");
