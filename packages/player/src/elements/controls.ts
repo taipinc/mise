@@ -78,6 +78,49 @@ export function createPlayPauseButton(
   };
 }
 
+// --- Element Playbar ---
+
+export interface ElementPlaybar {
+  element: HTMLDivElement;
+  update(fraction: number): void;
+  setPlaying(playing: boolean): void;
+  destroy(): void;
+}
+
+export function createElementPlaybar(
+  initialPlaying: boolean,
+  classNames: string[],
+  onPlayPause: (playing: boolean) => void,
+  onSeek: (fraction: number) => void
+): ElementPlaybar {
+  const bar = document.createElement("div");
+  bar.classList.add("mise-element-playbar");
+  for (const cls of classNames) {
+    bar.classList.add(cls);
+  }
+
+  const ppBtn = createPlayPauseButton(initialPlaying, onPlayPause);
+  bar.appendChild(ppBtn.element);
+
+  const scrub = createScrubTrack(onSeek);
+  bar.appendChild(scrub.element);
+
+  return {
+    element: bar,
+    update(fraction: number): void {
+      scrub.update(fraction);
+    },
+    setPlaying(playing: boolean): void {
+      ppBtn.setPlaying(playing);
+    },
+    destroy(): void {
+      ppBtn.destroy();
+      scrub.destroy();
+      bar.remove();
+    },
+  };
+}
+
 // --- Scrub Track ---
 
 export interface ScrubTrack {

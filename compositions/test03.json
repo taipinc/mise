@@ -151,7 +151,7 @@
         "loop": true,
         "syncWithClock": false,
         "audienceControl": false,
-        "bar": { "visible": false, "classNames": [] }
+        "bar": { "visible": true, "classNames": [] }
       },
       "audio": { "initial": "off", "audienceControl": true },
       "position": { "x": 1100, "y": 550 },
@@ -181,7 +181,7 @@
         "loop": true,
         "syncWithClock": true,
         "audienceControl": false,
-        "bar": { "visible": false, "classNames": [] }
+        "bar": { "visible": true, "classNames": [] }
       },
       "audio": { "initial": "off", "audienceControl": true },
       "position": { "x": 100, "y": 320 },
@@ -211,7 +211,7 @@
         "loop": false,
         "syncWithClock": true,
         "audienceControl": false,
-        "bar": { "visible": false, "classNames": [] }
+        "bar": { "visible": true, "classNames": [] }
       },
       "audio": { "initial": "off", "audienceControl": true },
       "position": { "x": 680, "y": 300 },

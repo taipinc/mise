@@ -1,5 +1,7 @@
 # Mise — TODO
 
+- [ ] Overhaul default css styling.
+
 ## Video Element
 - Remove default Vimeo controls (use `controls=0` in embed, rely on SDK for programmatic control)
 - Build custom playback controls UI that the author can style via CSS in the editor
