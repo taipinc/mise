@@ -3,6 +3,7 @@ import VimeoPlayer from "@vimeo/player";
 import type { ElementRenderer } from "./renderer";
 import { applyFlags, type FlagsCleanup } from "./flags";
 import { applyAnimation } from "./animation";
+import { createMuteButton, type MuteButton } from "./controls";
 
 // --- Provider detection ---
 
@@ -119,6 +120,7 @@ export class VideoElement implements ElementRenderer {
   private provider: VideoProvider = "vimeo";
   private flagsCleanup: FlagsCleanup | null = null;
   private resizeObserver: ResizeObserver | null = null;
+  private muteButton: MuteButton | null = null;
   readonly syncWithClock: boolean;
 
   constructor(element: MiseElement, stageRoot: HTMLDivElement, onClose?: () => void) {
@@ -168,6 +170,14 @@ export class VideoElement implements ElementRenderer {
       this.unmount();
       this.onCloseCallback?.();
     });
+
+    if (el.audio?.audienceControl) {
+      this.muteButton = createMuteButton(
+        wantsMuted,
+        (muted) => this.setMuted(muted)
+      );
+      wrapper.appendChild(this.muteButton.element);
+    }
 
     if (this.provider === "vimeo") {
       this.mountVimeo(clipContainer, el, wantsAutoplay, wantsMuted, wrapper);
@@ -221,7 +231,7 @@ export class VideoElement implements ElementRenderer {
 
     player.ready().then(async () => {
       if (wantsAutoplay) player.play().catch(() => {});
-      if (!wantsMuted) player.setMuted(false).catch(() => {});
+      if (!wantsMuted) player.setVolume(1).catch(() => {});
 
       if (el.mediaFit === "fit" && wrapper) {
         try {
@@ -349,7 +359,23 @@ export class VideoElement implements ElementRenderer {
     }).catch(() => {});
   }
 
+  private setMuted(muted: boolean): void {
+    if (this.vimeoPlayer) {
+      this.vimeoPlayer.setVolume(muted ? 0 : 1).catch(() => {});
+    } else if (this.ytPlayer) {
+      if (muted) {
+        this.ytPlayer.mute();
+      } else {
+        this.ytPlayer.unMute();
+      }
+    }
+  }
+
   unmount(): void {
+    if (this.muteButton) {
+      this.muteButton.destroy();
+      this.muteButton = null;
+    }
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;

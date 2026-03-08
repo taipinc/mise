@@ -129,7 +129,7 @@ export class MisePlayer {
         renderer = new VideoElement(el, this.stage.root, onClose);
         break;
       case "audio":
-        renderer = new AudioElement(el);
+        renderer = new AudioElement(el, this.stage.root, onClose);
         break;
       case "image":
         renderer = new ImageElement(el, this.stage.root, onClose);
