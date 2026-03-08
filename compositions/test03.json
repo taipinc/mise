@@ -58,8 +58,8 @@
       "type": "text",
       "src": null,
       "content": "<h2>Author CSS Overrides</h2><p>This composition demonstrates custom styling on every player surface. The title bar, close button, resize handle, content panels, and playback bar are all restyled via <code>stage.styles</code>.</p>",
-      "open": { "mode": "cue", "at": 2.0 },
-      "close": { "mode": "cue", "at": 30.0 },
+      "open": { "mode": "cue", "at": 180.0 },
+      "close": { "mode": "cue", "at": 200.0 },
       "persistOnLoop": false,
       "position": { "x": 100, "y": 100 },
       "size": { "width": 520, "height": 180 },
@@ -231,7 +231,7 @@
     {
       "id": "audio01",
       "type": "audio",
-      "src": "https://archive.org/download/testmp3testfile/mpthreetest.mp3",
+      "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
       "content": null,
       "open": { "mode": "cue", "at": 3.0 },
       "close": { "mode": "none", "at": null },
@@ -244,8 +244,8 @@
         "bar": { "visible": false, "classNames": [] }
       },
       "audio": { "initial": "off", "audienceControl": true },
-      "position": { "x": 50, "y": 950 },
-      "size": { "width": 40, "height": 40 },
+      "position": { "x": 100, "y": 400 },
+      "size": { "width": 160, "height": 80 },
       "zIndex": null,
       "background": false,
       "classNames": [],
@@ -256,6 +256,35 @@
         "zIndexable": true
       },
       "animation": { "enter": "entering", "exit": "exiting" }
+    },
+    {
+      "id": "audio02",
+      "type": "audio",
+      "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+      "content": null,
+      "open": { "mode": "cue", "at": 3.0 },
+      "close": { "mode": "none", "at": null },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "paused",
+        "loop": false,
+        "syncWithClock": true,
+        "audienceControl": true,
+        "bar": { "visible": true, "classNames": [] }
+      },
+      "audio": { "initial": "off", "audienceControl": true },
+      "position": { "x": 100, "y": 520 },
+      "size": { "width": 300, "height": 100 },
+      "zIndex": null,
+      "background": false,
+      "classNames": [],
+      "flags": {
+        "movable": true,
+        "resizable": false,
+        "closable": true,
+        "zIndexable": true
+      },
+      "animation": { "enter": "slide-up", "exit": "slide-down" }
     }
   ]
 }
