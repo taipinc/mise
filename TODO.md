@@ -15,3 +15,6 @@
       apply these classes to the `mise-playback-bar` element at render
       time so authors can fully override the default styles via their
       `stage.styles` CSS string
+
+## Issues
+- [ ] Support for urls like: `https://vimeo.com/user84007718/navigating-apartheid-excerpt-3-26`

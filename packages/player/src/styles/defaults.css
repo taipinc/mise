@@ -199,11 +199,15 @@
   cursor: grabbing;
 }
 
-/* --- Mute button (future) --- */
+/* --- Mute button --- */
 
 .mise-mute-btn {
+  position: absolute;
+  bottom: 0;
+  left: 0;
   width: 20px;
   height: 20px;
+  z-index: 2;
   background: #333;
   color: #ccc;
   font-size: 11px;
@@ -211,4 +215,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.mise-controls-visible .mise-mute-btn {
+  opacity: 1;
 }

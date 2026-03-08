@@ -141,7 +141,7 @@
     {
       "id": "video01",
       "type": "video",
-      "src": "https://vimeo.com/1161489532",
+      "src": "https://vimeo.com/1161539718",
       "content": null,
       "open": { "mode": "cue", "at": 4.0 },
       "close": { "mode": "none", "at": null },
@@ -153,7 +153,7 @@
         "audienceControl": false,
         "bar": { "visible": false, "classNames": [] }
       },
-      "audio": { "initial": "off", "audienceControl": false },
+      "audio": { "initial": "off", "audienceControl": true },
       "position": { "x": 1100, "y": 550 },
       "size": { "width": 640, "height": 360 },
       "zIndex": null,
@@ -171,7 +171,7 @@
     {
       "id": "video02",
       "type": "video",
-      "src": "https://vimeo.com/1161479294",
+      "src": "https://vimeo.com/879235196",
       "content": null,
       "open": { "mode": "cue", "at": 6.0 },
       "close": { "mode": "none", "at": null },
@@ -183,7 +183,7 @@
         "audienceControl": false,
         "bar": { "visible": false, "classNames": [] }
       },
-      "audio": { "initial": "off", "audienceControl": false },
+      "audio": { "initial": "off", "audienceControl": true },
       "position": { "x": 100, "y": 320 },
       "size": { "width": 520, "height": 260 },
       "zIndex": null,
@@ -201,7 +201,7 @@
     {
       "id": "youtube01",
       "type": "video",
-      "src": "https://www.youtube.com/watch?v=p5Aiyq3WT10",
+      "src": "https://youtu.be/pzfPsB6Mbuk?si=m-DXeQ4MJBWZJJ6u",
       "content": null,
       "open": { "mode": "cue", "at": 2.0 },
       "close": { "mode": "none", "at": null },
@@ -213,7 +213,7 @@
         "audienceControl": false,
         "bar": { "visible": false, "classNames": [] }
       },
-      "audio": { "initial": "off", "audienceControl": false },
+      "audio": { "initial": "off", "audienceControl": true },
       "position": { "x": 680, "y": 300 },
       "size": { "width": 560, "height": 315 },
       "zIndex": null,
@@ -227,6 +227,35 @@
       },
       "animation": { "enter": "entering", "exit": "exiting" },
       "mediaFit": "fill"
+    },
+    {
+      "id": "audio01",
+      "type": "audio",
+      "src": "https://archive.org/download/testmp3testfile/mpthreetest.mp3",
+      "content": null,
+      "open": { "mode": "cue", "at": 3.0 },
+      "close": { "mode": "none", "at": null },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "playing",
+        "loop": true,
+        "syncWithClock": false,
+        "audienceControl": false,
+        "bar": { "visible": false, "classNames": [] }
+      },
+      "audio": { "initial": "off", "audienceControl": true },
+      "position": { "x": 50, "y": 950 },
+      "size": { "width": 40, "height": 40 },
+      "zIndex": null,
+      "background": false,
+      "classNames": [],
+      "flags": {
+        "movable": true,
+        "resizable": false,
+        "closable": false,
+        "zIndexable": true
+      },
+      "animation": { "enter": "entering", "exit": "exiting" }
     }
   ]
 }
