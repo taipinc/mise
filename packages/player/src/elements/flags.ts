@@ -50,9 +50,6 @@ export function applyFlags(
   const cleanups: (() => void)[] = [];
   const flags = element.flags;
 
-  // Isolate stacking context so children (handle, close btn) don't leak above other elements
-  wrapper.style.isolation = "isolate";
-
   // --- Hover-to-show controls ---
   let hideTimer: ReturnType<typeof setTimeout> | null = null;
   let pinned = false;
@@ -95,46 +92,44 @@ export function applyFlags(
     if (hideTimer !== null) clearTimeout(hideTimer);
   });
 
-  // Title bar — drag handle and home for close button
-  const titleBar = document.createElement("div");
-  titleBar.classList.add("mise-title-bar");
-  titleBar.style.position = "absolute";
-  titleBar.style.top = "0";
-  titleBar.style.left = "0";
-  titleBar.style.width = "100%";
-  titleBar.style.height = `${TITLE_BAR_HEIGHT}px`;
-  titleBar.style.zIndex = "2";
-  titleBar.style.background = "rgba(0,0,0,0.35)";
-  titleBar.style.cursor = flags.movable ? "grab" : "default";
-  titleBar.style.touchAction = "none";
-  wrapper.appendChild(titleBar);
+  const needsTitleBar = flags.movable || flags.closable || flags.zIndexable;
+  let titleBar: HTMLDivElement | null = null;
 
-  titleBar.addEventListener("pointerenter", showControls);
-  titleBar.addEventListener("pointerleave", scheduleHide);
-  cleanups.push(() => {
-    titleBar.removeEventListener("pointerenter", showControls);
-    titleBar.removeEventListener("pointerleave", scheduleHide);
-    titleBar.remove();
-  });
+  if (needsTitleBar) {
+    titleBar = document.createElement("div");
+    titleBar.classList.add("mise-title-bar");
+    if (flags.movable) {
+      titleBar.style.cursor = "grab";
+    }
+    wrapper.appendChild(titleBar);
 
-  if (flags.zIndexable) {
-    const bringToFront = (): void => {
-      wrapper.style.zIndex = String(getMaxZIndex(stageRoot) + 1);
-    };
-    titleBar.addEventListener("pointerdown", bringToFront);
-    cleanups.push(() => titleBar.removeEventListener("pointerdown", bringToFront));
-  }
+    titleBar.addEventListener("pointerenter", showControls);
+    titleBar.addEventListener("pointerleave", scheduleHide);
+    cleanups.push(() => {
+      titleBar!.removeEventListener("pointerenter", showControls);
+      titleBar!.removeEventListener("pointerleave", scheduleHide);
+      titleBar!.remove();
+    });
 
-  if (flags.movable) {
-    cleanups.push(applyMovable(wrapper, titleBar, stageRoot, pinControls, unpinControls));
+    if (flags.zIndexable) {
+      const bringToFront = (): void => {
+        wrapper.style.zIndex = String(getMaxZIndex(stageRoot) + 1);
+      };
+      titleBar.addEventListener("pointerdown", bringToFront);
+      cleanups.push(() => titleBar!.removeEventListener("pointerdown", bringToFront));
+    }
+
+    if (flags.movable) {
+      cleanups.push(applyMovable(wrapper, titleBar, stageRoot, pinControls, unpinControls));
+    }
+
+    if (flags.closable && onClose) {
+      cleanups.push(applyClosable(titleBar, onClose));
+    }
   }
 
   if (flags.resizable) {
     cleanups.push(applyResizable(wrapper, element, stageRoot, showControls, scheduleHide, pinControls, unpinControls));
-  }
-
-  if (flags.closable && onClose) {
-    cleanups.push(applyClosable(titleBar, onClose));
   }
 
   return {
@@ -222,14 +217,6 @@ function applyResizable(
 ): () => void {
   const handle = document.createElement("div");
   handle.classList.add("mise-resize-handle");
-  handle.style.position = "absolute";
-  handle.style.right = "0";
-  handle.style.bottom = "0";
-  handle.style.width = "20px";
-  handle.style.height = "20px";
-  handle.style.cursor = "nwse-resize";
-  handle.style.background = "rgba(255,255,255,0.3)";
-  handle.style.touchAction = "none";
   wrapper.appendChild(handle);
 
   handle.addEventListener("pointerenter", showControls);
@@ -305,19 +292,6 @@ function applyClosable(
 ): () => void {
   const btn = document.createElement("div");
   btn.classList.add("mise-close-btn");
-  btn.style.position = "absolute";
-  btn.style.top = "0";
-  btn.style.right = "0";
-  btn.style.width = "20px";
-  btn.style.height = "20px";
-  btn.style.cursor = "pointer";
-  btn.style.background = "rgba(0,0,0,0.6)";
-  btn.style.color = "#fff";
-  btn.style.display = "flex";
-  btn.style.alignItems = "center";
-  btn.style.justifyContent = "center";
-  btn.style.fontSize = "14px";
-  btn.style.lineHeight = "1";
   btn.textContent = "\u00D7";
 
   const onClick = (e: Event): void => {

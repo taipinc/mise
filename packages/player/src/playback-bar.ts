@@ -81,7 +81,6 @@ export class PlaybackBar {
       this.playhead.addEventListener("pointerdown", this.onPlayheadPointerDown);
       this.playhead.addEventListener("pointermove", this.onPlayheadPointerMove);
       this.playhead.addEventListener("pointerup", this.onPlayheadPointerUp);
-      this.playhead.style.touchAction = "none";
     }
 
     stageRoot.addEventListener("pointermove", this.onStagePointerMove);

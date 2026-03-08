@@ -74,8 +74,7 @@ export class VideoElement implements ElementRenderer {
 
     // Wrapper div holds the iframe + flag UI (close btn, resize handle)
     const wrapper = document.createElement("div");
-    wrapper.classList.add("mise-element");
-    wrapper.style.position = "absolute";
+    wrapper.classList.add("mise-element", "mise-type-video");
     wrapper.style.left = `${el.position.x}px`;
     wrapper.style.top = `${el.position.y}px`;
     wrapper.style.width = `${el.size.width}px`;
@@ -88,15 +87,10 @@ export class VideoElement implements ElementRenderer {
 
     // Clip container for mediaFit — iframe can't receive object-fit directly
     const clipContainer = document.createElement("div");
-    clipContainer.style.width = "100%";
-    clipContainer.style.height = "100%";
-    clipContainer.style.overflow = "hidden";
-    clipContainer.style.position = "relative";
+    clipContainer.classList.add("mise-video-clip");
 
     const iframe = document.createElement("iframe");
     iframe.src = `https://player.vimeo.com/video/${videoId}?${params.toString()}`;
-    iframe.style.border = "none";
-    iframe.style.display = "block";
     iframe.setAttribute("allow", "autoplay; fullscreen");
 
     if (el.mediaFit === "fit") {

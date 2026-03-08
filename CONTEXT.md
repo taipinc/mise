@@ -208,7 +208,7 @@ A composition with multiple video elements (each with `muted` toggled differentl
 - [x] Implement full CSS style block with Shadow DOM injection
 - [ ] Style the Playback Bar via CSS `classNames`
 - [ ] Style the default video/audio controls via CSS `classNames`
-- [ ] Provide a default CSS theme for the all elements (default.css)
+- [x] Provide a default CSS theme for the all elements (default.css)
 - [ ] Build and test audio elements with Tone.js
 - [ ] Support for additional video and audio providers (YouTube, direct URLs)
 
