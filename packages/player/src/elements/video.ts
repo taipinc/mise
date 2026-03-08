@@ -6,12 +6,14 @@ import { applyAnimation } from "./animation";
 import { createMuteButton, createElementPlaybar, type MuteButton, type ElementPlaybar } from "./controls";
 
 // --- Provider detection ---
+// TODO: YouTube support is a future provider branch following the same pattern as Vimeo.
 
-type VideoProvider = "vimeo" | "youtube";
+type VideoProvider = "vimeo" | "youtube" | "native";
 
 function detectProvider(src: string): VideoProvider {
+  if (/vimeo\.com\//i.test(src)) return "vimeo";
   if (/youtube\.com|youtu\.be/i.test(src)) return "youtube";
-  return "vimeo";
+  return "native";
 }
 
 function extractVimeoId(src: string): string {
@@ -89,7 +91,7 @@ function loadYouTubeAPI(): Promise<void> {
   return ytApiPromise;
 }
 
-// --- Shared cover-size helper ---
+// --- Shared cover-size helper (for iframe-based providers) ---
 
 const ASSUMED_VIDEO_ASPECT = 16 / 9;
 
@@ -119,7 +121,8 @@ export class VideoElement implements ElementRenderer {
   private wrapper: HTMLDivElement | null = null;
   private vimeoPlayer: VimeoPlayer | null = null;
   private ytPlayer: YTPlayerInstance | null = null;
-  private provider: VideoProvider = "vimeo";
+  private nativeVideo: HTMLVideoElement | null = null;
+  private provider: VideoProvider = "native";
   private flagsCleanup: FlagsCleanup | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private muteButton: MuteButton | null = null;
@@ -195,9 +198,63 @@ export class VideoElement implements ElementRenderer {
 
     if (this.provider === "vimeo") {
       this.mountVimeo(clipContainer, el, wantsAutoplay, wantsMuted, wrapper);
-    } else {
+    } else if (this.provider === "youtube") {
       this.mountYouTube(clipContainer, el, wantsAutoplay, wantsMuted, wrapper);
+    } else {
+      this.mountNative(clipContainer, el, wantsAutoplay, wantsMuted, wrapper);
     }
+  }
+
+  private mountNative(
+    clipContainer: HTMLDivElement,
+    el: MiseElement,
+    wantsAutoplay: boolean,
+    wantsMuted: boolean,
+    wrapper: HTMLDivElement
+  ): void {
+    const video = document.createElement("video");
+    video.src = el.src ?? "";
+    video.setAttribute("playsinline", "");
+    video.style.width = "100%";
+    video.style.height = "100%";
+    video.style.objectFit = el.mediaFit === "fit" ? "contain" : "cover";
+    video.style.display = "block";
+
+    if (el.playback?.loop) video.loop = true;
+    if (wantsMuted) video.muted = true;
+
+    clipContainer.appendChild(video);
+    this.nativeVideo = video;
+
+    // For "fit" mode, shrink wrapper to native aspect ratio once metadata loads
+    if (el.mediaFit === "fit") {
+      video.addEventListener("loadedmetadata", () => {
+        if (!this.wrapper || !video.videoWidth || !video.videoHeight) return;
+        const videoAspect = video.videoWidth / video.videoHeight;
+        const boxW = el.size.width;
+        const boxH = el.size.height;
+        const boxAspect = boxW / boxH;
+
+        let fitW: number;
+        let fitH: number;
+        if (videoAspect > boxAspect) {
+          fitW = boxW;
+          fitH = boxW / videoAspect;
+        } else {
+          fitH = boxH;
+          fitW = boxH * videoAspect;
+        }
+
+        wrapper.style.width = `${fitW}px`;
+        wrapper.style.height = `${fitH}px`;
+      }, { once: true });
+    }
+
+    if (wantsAutoplay) {
+      video.play().catch(() => {});
+    }
+
+    this.startPlaybarPolling();
   }
 
   private mountVimeo(
@@ -390,6 +447,12 @@ export class VideoElement implements ElementRenderer {
       } else {
         this.ytPlayer.pauseVideo();
       }
+    } else if (this.nativeVideo) {
+      if (playing) {
+        this.nativeVideo.play().catch(() => {});
+      } else {
+        this.nativeVideo.pause();
+      }
     }
   }
 
@@ -401,6 +464,9 @@ export class VideoElement implements ElementRenderer {
     } else if (this.ytPlayer) {
       const dur = this.ytPlayer.getDuration();
       if (dur) this.ytPlayer.seekTo(fraction * dur, true);
+    } else if (this.nativeVideo) {
+      const dur = this.nativeVideo.duration;
+      if (dur && isFinite(dur)) this.nativeVideo.currentTime = fraction * dur;
     }
   }
 
@@ -419,6 +485,11 @@ export class VideoElement implements ElementRenderer {
         const time = this.ytPlayer.getCurrentTime();
         const dur = this.ytPlayer.getDuration();
         if (dur > 0) this.elementPlaybar.update(time / dur);
+      } else if (this.nativeVideo) {
+        const dur = this.nativeVideo.duration;
+        if (dur && isFinite(dur)) {
+          this.elementPlaybar.update(this.nativeVideo.currentTime / dur);
+        }
       }
     }, 250);
   }
@@ -432,6 +503,8 @@ export class VideoElement implements ElementRenderer {
       } else {
         this.ytPlayer.unMute();
       }
+    } else if (this.nativeVideo) {
+      this.nativeVideo.muted = muted;
     }
   }
 
@@ -461,12 +534,18 @@ export class VideoElement implements ElementRenderer {
     this.vimeoPlayer = null;
     const ytp = this.ytPlayer;
     this.ytPlayer = null;
+    const nv = this.nativeVideo;
+    this.nativeVideo = null;
 
     if (this.wrapper) {
       applyAnimation(this.wrapper, this.element.animation.exit, () => {
         if (vp) vp.destroy().catch(() => {});
         if (ytp) {
           try { ytp.destroy(); } catch { /* ignore */ }
+        }
+        if (nv) {
+          nv.pause();
+          nv.src = "";
         }
         this.wrapper?.remove();
         this.wrapper = null;
@@ -475,6 +554,10 @@ export class VideoElement implements ElementRenderer {
       if (vp) vp.destroy().catch(() => {});
       if (ytp) {
         try { ytp.destroy(); } catch { /* ignore */ }
+      }
+      if (nv) {
+        nv.pause();
+        nv.src = "";
       }
     }
   }
@@ -486,6 +569,8 @@ export class VideoElement implements ElementRenderer {
       this.vimeoPlayer.setCurrentTime(time).catch(() => {});
     } else if (this.ytPlayer) {
       this.ytPlayer.seekTo(time, true);
+    } else if (this.nativeVideo) {
+      this.nativeVideo.currentTime = time;
     }
   }
 
@@ -495,6 +580,8 @@ export class VideoElement implements ElementRenderer {
       this.vimeoPlayer.pause().catch(() => {});
     } else if (this.ytPlayer) {
       this.ytPlayer.pauseVideo();
+    } else if (this.nativeVideo) {
+      this.nativeVideo.pause();
     }
     this.elementPlaybar?.setPlaying(false);
   }
@@ -505,6 +592,8 @@ export class VideoElement implements ElementRenderer {
       this.vimeoPlayer.play().catch(() => {});
     } else if (this.ytPlayer) {
       this.ytPlayer.playVideo();
+    } else if (this.nativeVideo) {
+      this.nativeVideo.play().catch(() => {});
     }
     this.elementPlaybar?.setPlaying(true);
   }

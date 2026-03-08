@@ -84,6 +84,10 @@
   pointer-events: none;
 }
 
+.mise-video-clip video {
+  display: block;
+}
+
 /* --- Audio defaults --- */
 
 .mise-type-audio .mise-body {
