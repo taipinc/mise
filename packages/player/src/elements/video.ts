@@ -3,7 +3,7 @@ import VimeoPlayer from "@vimeo/player";
 import type { ElementRenderer } from "./renderer";
 import { applyFlags, type FlagsCleanup } from "./flags";
 import { applyAnimation } from "./animation";
-import { createMuteButton, type MuteButton } from "./controls";
+import { createMuteButton, createElementPlaybar, type MuteButton, type ElementPlaybar } from "./controls";
 
 // --- Provider detection ---
 
@@ -41,6 +41,8 @@ interface YTPlayerInstance {
   seekTo(seconds: number, allowSeekAhead: boolean): void;
   mute(): void;
   unMute(): void;
+  getCurrentTime(): number;
+  getDuration(): number;
   getIframe(): HTMLIFrameElement;
   destroy(): void;
 }
@@ -121,6 +123,8 @@ export class VideoElement implements ElementRenderer {
   private flagsCleanup: FlagsCleanup | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private muteButton: MuteButton | null = null;
+  private elementPlaybar: ElementPlaybar | null = null;
+  private playbarPollTimer: ReturnType<typeof setInterval> | null = null;
   readonly syncWithClock: boolean;
 
   constructor(element: MiseElement, stageRoot: HTMLDivElement, onClose?: () => void) {
@@ -177,6 +181,16 @@ export class VideoElement implements ElementRenderer {
         (muted) => this.setMuted(muted)
       );
       wrapper.appendChild(this.muteButton.element);
+    }
+
+    if (el.playback?.bar?.visible) {
+      this.elementPlaybar = createElementPlaybar(
+        wantsAutoplay,
+        el.playback.bar.classNames ?? [],
+        (playing) => this.togglePlay(playing),
+        (fraction) => this.seekToFraction(fraction)
+      );
+      wrapper.appendChild(this.elementPlaybar.element);
     }
 
     if (this.provider === "vimeo") {
@@ -262,6 +276,8 @@ export class VideoElement implements ElementRenderer {
           // Unable to get dimensions — keep authored size
         }
       }
+
+      this.startPlaybarPolling();
     }).catch(() => {});
   }
 
@@ -351,12 +367,60 @@ export class VideoElement implements ElementRenderer {
             if (!wantsMuted) {
               event.target.unMute();
             }
+
+            this.startPlaybarPolling();
           },
         },
       });
 
       this.ytPlayer = ytPlayer;
     }).catch(() => {});
+  }
+
+  private togglePlay(playing: boolean): void {
+    if (this.vimeoPlayer) {
+      if (playing) {
+        this.vimeoPlayer.play().catch(() => {});
+      } else {
+        this.vimeoPlayer.pause().catch(() => {});
+      }
+    } else if (this.ytPlayer) {
+      if (playing) {
+        this.ytPlayer.playVideo();
+      } else {
+        this.ytPlayer.pauseVideo();
+      }
+    }
+  }
+
+  private seekToFraction(fraction: number): void {
+    if (this.vimeoPlayer) {
+      this.vimeoPlayer.getDuration().then((dur) => {
+        this.vimeoPlayer?.setCurrentTime(fraction * dur).catch(() => {});
+      }).catch(() => {});
+    } else if (this.ytPlayer) {
+      const dur = this.ytPlayer.getDuration();
+      if (dur) this.ytPlayer.seekTo(fraction * dur, true);
+    }
+  }
+
+  private startPlaybarPolling(): void {
+    if (!this.elementPlaybar) return;
+    this.playbarPollTimer = setInterval(() => {
+      if (!this.elementPlaybar) return;
+      if (this.vimeoPlayer) {
+        Promise.all([
+          this.vimeoPlayer.getCurrentTime(),
+          this.vimeoPlayer.getDuration(),
+        ]).then(([time, dur]) => {
+          if (dur > 0) this.elementPlaybar?.update(time / dur);
+        }).catch(() => {});
+      } else if (this.ytPlayer) {
+        const time = this.ytPlayer.getCurrentTime();
+        const dur = this.ytPlayer.getDuration();
+        if (dur > 0) this.elementPlaybar.update(time / dur);
+      }
+    }, 250);
   }
 
   private setMuted(muted: boolean): void {
@@ -372,6 +436,14 @@ export class VideoElement implements ElementRenderer {
   }
 
   unmount(): void {
+    if (this.playbarPollTimer !== null) {
+      clearInterval(this.playbarPollTimer);
+      this.playbarPollTimer = null;
+    }
+    if (this.elementPlaybar) {
+      this.elementPlaybar.destroy();
+      this.elementPlaybar = null;
+    }
     if (this.muteButton) {
       this.muteButton.destroy();
       this.muteButton = null;
@@ -424,6 +496,7 @@ export class VideoElement implements ElementRenderer {
     } else if (this.ytPlayer) {
       this.ytPlayer.pauseVideo();
     }
+    this.elementPlaybar?.setPlaying(false);
   }
 
   resume(): void {
@@ -433,5 +506,6 @@ export class VideoElement implements ElementRenderer {
     } else if (this.ytPlayer) {
       this.ytPlayer.playVideo();
     }
+    this.elementPlaybar?.setPlaying(true);
   }
 }

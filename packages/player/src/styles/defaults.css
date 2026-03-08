@@ -1,6 +1,9 @@
 /* ================================================================
    Mise Player — Default Stylesheet
    Injected first inside the Shadow DOM. Author styles override these.
+
+   Base unit: 20px — used consistently for title bar height, close
+   button, resize handle, mute button, and element playbar height.
    ================================================================ */
 
 /* --- Host & Stage --- */
@@ -103,12 +106,12 @@
 .mise-audio-controls {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   width: 90%;
 }
 
 .mise-audio-controls .mise-play-pause-btn {
-  width: 24px;
+  width: 20px;
   height: 20px;
   flex-shrink: 0;
   font-size: 10px;
@@ -117,7 +120,7 @@
 .mise-audio-controls .mise-mute-btn {
   position: static;
   opacity: 1;
-  width: 24px;
+  width: 20px;
   height: 20px;
   flex-shrink: 0;
 }
@@ -131,6 +134,8 @@
   cursor: pointer;
   touch-action: none;
 }
+
+/* --- Shared scrub track parts (used by audio controls & element playbar) --- */
 
 .mise-scrub-fill {
   position: absolute;
@@ -153,6 +158,40 @@
   pointer-events: none;
 }
 
+/* --- Element Playbar (per-element transport) --- */
+
+.mise-element-playbar {
+  position: absolute;
+  bottom: 0;
+  left: 20px;
+  right: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  gap: 4px;
+  box-sizing: border-box;
+  z-index: 2;
+}
+
+.mise-element-playbar .mise-play-pause-btn {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
+.mise-element-playbar .mise-scrub-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  position: relative;
+  cursor: pointer;
+  touch-action: none;
+}
+
 /* --- Title bar (drag handle) --- */
 
 .mise-title-bar {
@@ -166,7 +205,7 @@
   touch-action: none;
 }
 
-/* --- Close button --- */
+/* --- Close button (inside title bar) --- */
 
 .mise-close-btn {
   position: absolute;
@@ -184,7 +223,7 @@
   justify-content: center;
 }
 
-/* --- Resize handle --- */
+/* --- Resize handle (bottom-right corner) --- */
 
 .mise-resize-handle {
   position: absolute;
@@ -195,22 +234,46 @@
   background: #555;
   cursor: nwse-resize;
   touch-action: none;
+  z-index: 3;
 }
 
-/* --- Controls hover visibility --- */
+/* --- Mute button (bottom-left corner) --- */
+
+.mise-mute-btn {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  z-index: 2;
+  background: #333;
+  color: #ccc;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- Controls hover visibility ---
+   All overlay controls fade in together on hover. */
 
 .mise-title-bar,
-.mise-resize-handle {
+.mise-resize-handle,
+.mise-mute-btn,
+.mise-element-playbar {
   opacity: 0;
   transition: opacity 0.2s ease;
 }
 
 .mise-controls-visible .mise-title-bar,
-.mise-controls-visible .mise-resize-handle {
+.mise-controls-visible .mise-resize-handle,
+.mise-controls-visible .mise-mute-btn,
+.mise-controls-visible .mise-element-playbar {
   opacity: 1;
 }
 
-/* --- Playback Bar --- */
+/* --- Stage Playback Bar --- */
 
 .mise-playback-bar {
   position: absolute;
@@ -269,28 +332,4 @@
 
 .mise-playhead:active {
   cursor: grabbing;
-}
-
-/* --- Mute button --- */
-
-.mise-mute-btn {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 20px;
-  height: 20px;
-  z-index: 2;
-  background: #333;
-  color: #ccc;
-  font-size: 11px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.mise-controls-visible .mise-mute-btn {
-  opacity: 1;
 }
