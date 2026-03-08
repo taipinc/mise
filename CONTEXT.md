@@ -210,7 +210,7 @@ A composition with multiple video elements (each with `muted` toggled differentl
 - [x] Style the default video/audio controls via CSS `classNames`
 - [x] Provide a default CSS theme for the all elements (default.css)
 - [x] Build and test audio elements with Tone.js
-- [ ] Support for additional video and audio providers (YouTube, direct URLs)
+- [x] Support for additional video and audio providers (YouTube, direct URLs)
 - [ ] Support for optional playback time display
 
 ### Phase 2 — Minimal Editor
@@ -231,6 +231,7 @@ A composition with multiple video elements (each with `muted` toggled differentl
 
 - [x] Design element link schema (trigger → target element ID)
 - [x] Implement link-triggered element opening in the player
+- [ ] Support \data-mise-action="seek:N" in component/text elements to jump the Clock to a specific timestamp
 - [ ] State variables in project JSON
 - [ ] Conditional element visibility
 

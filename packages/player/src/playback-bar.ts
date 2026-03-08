@@ -2,6 +2,13 @@ import type { Clock, MiseComposition } from "@mise/core";
 
 const HOVER_MARGIN = 40;
 
+function formatTime(seconds: number): string {
+  const s = Math.floor(seconds);
+  const m = Math.floor(s / 60);
+  const rem = s % 60;
+  return `${m}:${rem < 10 ? "0" : ""}${rem}`;
+}
+
 function computeHorizon(composition: MiseComposition): number {
   if (composition.stage.playback.duration !== null) {
     return composition.stage.playback.duration;
@@ -28,6 +35,9 @@ export class PlaybackBar {
   private playPauseBtn: HTMLDivElement;
   private scrubTrack: HTMLDivElement;
   private playhead: HTMLDivElement;
+  private timeCurrentEl: HTMLSpanElement | null = null;
+  private timeTotalEl: HTMLSpanElement | null = null;
+  private readonly duration: number | null;
 
   private isPlaying = false;
   private isDragging = false;
@@ -50,6 +60,7 @@ export class PlaybackBar {
     this.interactive = composition.stage.playbackBar.interactive;
     this.horizon = computeHorizon(composition);
     this.stageHeight = composition.stage.viewBox.height;
+    this.duration = composition.stage.playback.duration;
 
     // Build DOM
     this.barEl = document.createElement("div");
@@ -63,6 +74,18 @@ export class PlaybackBar {
     this.playPauseBtn.textContent = "\u25B6";
     this.barEl.appendChild(this.playPauseBtn);
 
+    const pbBar = composition.stage.playbackBar;
+
+    if (pbBar.showCurrentTime) {
+      this.timeCurrentEl = document.createElement("span");
+      this.timeCurrentEl.classList.add("mise-time-current");
+      for (const cls of pbBar.timeCurrentClassNames ?? []) {
+        this.timeCurrentEl.classList.add(cls);
+      }
+      this.timeCurrentEl.textContent = "0:00";
+      this.barEl.appendChild(this.timeCurrentEl);
+    }
+
     this.scrubTrack = document.createElement("div");
     this.scrubTrack.classList.add("mise-scrub-track");
     this.barEl.appendChild(this.scrubTrack);
@@ -70,6 +93,16 @@ export class PlaybackBar {
     this.playhead = document.createElement("div");
     this.playhead.classList.add("mise-playhead");
     this.scrubTrack.appendChild(this.playhead);
+
+    if (pbBar.showTotalTime) {
+      this.timeTotalEl = document.createElement("span");
+      this.timeTotalEl.classList.add("mise-time-total");
+      for (const cls of pbBar.timeTotalClassNames ?? []) {
+        this.timeTotalEl.classList.add(cls);
+      }
+      this.timeTotalEl.textContent = this.duration !== null ? formatTime(this.duration) : "\u221E";
+      this.barEl.appendChild(this.timeTotalEl);
+    }
 
     stageRoot.appendChild(this.barEl);
 
@@ -95,6 +128,9 @@ export class PlaybackBar {
       }
       if (!this.isDragging) {
         this.updatePlayhead(e.time);
+      }
+      if (this.timeCurrentEl) {
+        this.timeCurrentEl.textContent = formatTime(e.time);
       }
     });
   }
