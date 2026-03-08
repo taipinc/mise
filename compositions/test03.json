@@ -141,7 +141,7 @@
     {
       "id": "video01",
       "type": "video",
-      "src": "https://vimeo.com/1161539718",
+      "src": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
       "content": null,
       "open": { "mode": "cue", "at": 4.0 },
       "close": { "mode": "none", "at": null },
