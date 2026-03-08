@@ -40,8 +40,10 @@ export class ComponentElement implements ElementRenderer {
       wrapper.style.zIndex = String(el.zIndex);
     }
 
+    const body = document.createElement("div");
+    body.classList.add("mise-body");
     for (const cls of el.classNames) {
-      wrapper.classList.add(cls);
+      body.classList.add(cls);
     }
 
     const content = document.createElement("div");
@@ -51,7 +53,8 @@ export class ComponentElement implements ElementRenderer {
         ADD_ATTR: ["data-mise-action"],
       });
     }
-    wrapper.appendChild(content);
+    body.appendChild(content);
+    wrapper.appendChild(body);
 
     // Wire up data-mise-action clicks
     wrapper.addEventListener("click", this.onWrapperClick);

@@ -206,9 +206,14 @@ These class names are applied by the player to its rendered UI elements. Authors
 
 | Class | Element |
 |---|---|
-| `.mise-element` | Wrapper div for every element on the stage |
-| `.mise-close-btn` | The close button added when `flags.closable` is `true` |
-| `.mise-playback-bar` | The stage Playback Bar container |
-| `.mise-scrub-track` | The scrub track inside the Playback Bar |
-| `.mise-playhead` | The playhead inside the Playback Bar |
-| `.mise-play-pause-btn` | The play/pause button inside the Playback Bar |
+| `.mise-element` | Outer positioning wrapper for every element. Do not style visually — use `.mise-body` instead. |
+| `.mise-body` | Inner content wrapper that receives author `classNames`. Apply border-radius, box-shadow, overflow, etc. here. |
+| `.mise-content` | Scrollable content container inside `text` and `component` elements. |
+| `.mise-video-clip` | Clipping container for video iframes inside `.mise-body`. |
+| `.mise-title-bar` | The drag handle bar at the top of elements (when `movable`, `closable`, or `zIndexable`). |
+| `.mise-close-btn` | The close button inside the title bar (when `flags.closable` is `true`). |
+| `.mise-resize-handle` | The resize handle at the bottom-right corner (when `flags.resizable` is `true`). |
+| `.mise-playback-bar` | The stage Playback Bar container. |
+| `.mise-scrub-track` | The scrub track inside the Playback Bar. |
+| `.mise-playhead` | The playhead inside the Playback Bar. |
+| `.mise-play-pause-btn` | The play/pause button inside the Playback Bar. |

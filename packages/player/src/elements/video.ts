@@ -85,6 +85,12 @@ export class VideoElement implements ElementRenderer {
       wrapper.style.zIndex = String(el.zIndex);
     }
 
+    const body = document.createElement("div");
+    body.classList.add("mise-body");
+    for (const cls of el.classNames) {
+      body.classList.add(cls);
+    }
+
     // Clip container for mediaFit — iframe can't receive object-fit directly
     const clipContainer = document.createElement("div");
     clipContainer.classList.add("mise-video-clip");
@@ -115,7 +121,8 @@ export class VideoElement implements ElementRenderer {
     }
 
     clipContainer.appendChild(iframe);
-    wrapper.appendChild(clipContainer);
+    body.appendChild(clipContainer);
+    wrapper.appendChild(body);
     this.stageRoot.appendChild(wrapper);
     this.wrapper = wrapper;
     this.iframe = iframe;
@@ -127,19 +134,49 @@ export class VideoElement implements ElementRenderer {
       this.onCloseCallback?.();
     });
 
-    for (const cls of el.classNames) {
-      wrapper.classList.add(cls);
-    }
-
     const player = new Player(iframe);
     this.vimeoPlayer = player;
 
-    player.ready().then(() => {
+    player.ready().then(async () => {
       if (wantsAutoplay) {
         player.play().catch(() => {});
       }
       if (!wantsMuted) {
         player.setMuted(false).catch(() => {});
+      }
+
+      // For "fit" mode, shrink wrapper to the video's native aspect ratio
+      // so controls match the visible video area (no letterbox padding)
+      if (el.mediaFit === "fit" && wrapper) {
+        try {
+          const [nativeW, nativeH] = await Promise.all([
+            player.getVideoWidth(),
+            player.getVideoHeight(),
+          ]);
+          if (nativeW && nativeH) {
+            const videoAspect = nativeW / nativeH;
+            const boxW = el.size.width;
+            const boxH = el.size.height;
+            const boxAspect = boxW / boxH;
+
+            let fitW: number;
+            let fitH: number;
+            if (videoAspect > boxAspect) {
+              // Video is wider — width-limited
+              fitW = boxW;
+              fitH = boxW / videoAspect;
+            } else {
+              // Video is taller — height-limited
+              fitH = boxH;
+              fitW = boxH * videoAspect;
+            }
+
+            wrapper.style.width = `${fitW}px`;
+            wrapper.style.height = `${fitH}px`;
+          }
+        } catch {
+          // Unable to get dimensions — keep authored size
+        }
       }
     }).catch(() => {});
   }
