@@ -1,0 +1,380 @@
+{
+  "version": "0.1",
+
+  "meta": {
+    "title": "Test 04 — Visibility Field",
+    "author": "Mise Dev",
+    "description": "Tests the visible field on elements. Includes all test03 elements plus visibility-specific test cases.",
+    "created": "2026-03-09",
+    "modified": "2026-03-09"
+  },
+
+  "stage": {
+    "viewBox": { "width": 1920, "height": 1080 },
+    "scaling": true,
+    "background": "",
+    "poster": "",
+    "styles": "@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } @keyframes fadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.95); } } @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } @keyframes slideDown { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } } .entering { animation: fadeIn 0.4s ease forwards; } .exiting { animation: fadeOut 0.4s ease forwards; } .slide-up { animation: slideUp 0.5s ease forwards; } .slide-down { animation: slideDown 0.5s ease forwards; } .mise-title-bar { background: rgba(30, 60, 90, 0.9); } .mise-close-btn { background: rgba(180, 60, 60, 0.8); color: #fff; } .mise-close-btn:hover { background: #c0392b; } .mise-resize-handle { background: rgba(255, 255, 255, 0.15); } .mise-content { background: rgba(10, 20, 35, 0.85); border: 1px solid rgba(100, 160, 220, 0.25); } .mise-content h2 { margin: 0 0 8px; font-size: 18px; color: #7eb8e0; } .mise-content p { margin: 0; color: rgba(255, 255, 255, 0.7); } .mise-content code { background: rgba(255, 255, 255, 0.08); padding: 1px 5px; border-radius: 3px; font-size: 13px; } .mise-content [data-mise-action] { color: #5dade2; cursor: pointer; text-decoration: none; border-bottom: 1px dotted rgba(93, 173, 226, 0.4); } .mise-content [data-mise-action]:hover { color: #85c1e9; border-bottom-color: rgba(133, 193, 233, 0.6); } .custom-bar { height: 36px; bottom: 20px; left: 50%; width: 60%; transform: translateX(-50%); border-radius: 8px; background: linear-gradient(to right, rgba(10, 20, 35, 0.95), rgba(30, 60, 90, 0.95)); border: 1px solid rgba(100, 160, 220, 0.2); } .custom-bar .mise-play-pause-btn { color: #7eb8e0; width: 50px; height: 36px; font-size: 16px; } .custom-bar .mise-playhead { background: rgba(93, 173, 226, 0.7); border-radius: 4px; width: 28px; height: 36px; } .custom-bar .mise-scrub-track { height: 36px; } .rounded-frame { border-radius: 8px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); } .accent-panel .mise-content { border-color: rgba(46, 204, 113, 0.3); } .accent-panel .mise-content h2 { color: #2ecc71; }",
+    "playback": {
+      "duration": 500,
+      "loop": false,
+      "sync": {
+        "withClock": true
+      }
+    },
+
+    "playbackBar": {
+      "visible": true,
+      "interactive": true,
+      "classNames": [],
+      "showCurrentTime": true,
+      "showTotalTime": true,
+      "timeCurrentClassNames": [],
+      "timeTotalClassNames": []
+    }
+  },
+
+  "elements": [
+    {
+      "id": "bg-image",
+      "type": "image",
+      "src": "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=1920&q=80",
+      "content": null,
+      "open": { "mode": "cue", "at": 0.0 },
+      "close": { "mode": "none", "at": null },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "paused",
+        "loop": false,
+        "syncWithClock": false,
+        "audienceControl": false,
+        "bar": { "visible": false, "classNames": [] }
+      },
+      "audio": { "initial": "off", "audienceControl": false },
+      "position": { "x": 0, "y": 0 },
+      "size": { "width": 1920, "height": 1080 },
+      "zIndex": null,
+      "background": true,
+      "classNames": [],
+      "flags": {
+        "movable": false,
+        "resizable": false,
+        "closable": false,
+        "zIndexable": false
+      },
+      "animation": { "enter": "entering", "exit": "exiting" },
+      "mediaFit": "fill",
+      "visible": true
+    },
+    {
+      "id": "text01",
+      "type": "text",
+      "src": null,
+      "content": "<h2>Author CSS Overrides</h2><p>This composition demonstrates custom styling on every player surface. The title bar, close button, resize handle, content panels, and playback bar are all restyled via <code>stage.styles</code>.</p>",
+      "open": { "mode": "cue", "at": 180.0 },
+      "close": { "mode": "cue", "at": 200.0 },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "paused",
+        "loop": false,
+        "syncWithClock": false,
+        "audienceControl": false,
+        "bar": { "visible": false, "classNames": [] }
+      },
+      "audio": { "initial": "off", "audienceControl": false },
+      "position": { "x": 100, "y": 100 },
+      "size": { "width": 520, "height": 180 },
+      "zIndex": null,
+      "background": false,
+      "classNames": [],
+      "flags": {
+        "movable": true,
+        "resizable": true,
+        "closable": true,
+        "zIndexable": true
+      },
+      "animation": { "enter": "slide-up", "exit": "slide-down" },
+      "mediaFit": "fill",
+      "visible": true
+    },
+    {
+      "id": "image01",
+      "type": "image",
+      "src": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=640&q=80",
+      "content": null,
+      "open": { "mode": "cue", "at": 5.0 },
+      "close": { "mode": "userClose", "at": null },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "paused",
+        "loop": false,
+        "syncWithClock": false,
+        "audienceControl": false,
+        "bar": { "visible": false, "classNames": [] }
+      },
+      "audio": { "initial": "off", "audienceControl": false },
+      "position": { "x": 1100, "y": 80 },
+      "size": { "width": 640, "height": 400 },
+      "zIndex": null,
+      "background": false,
+      "classNames": ["rounded-frame"],
+      "flags": {
+        "movable": true,
+        "resizable": true,
+        "closable": true,
+        "zIndexable": true
+      },
+      "animation": { "enter": "entering", "exit": "exiting" },
+      "mediaFit": "fit",
+      "visible": true
+    },
+    {
+      "id": "component01",
+      "type": "component",
+      "src": null,
+      "content": "<div><strong>Interactive Component</strong><br><br>Click to <span data-mise-action='open:text02'>reveal the linked panel</span>.<br><br>Action links are styled via <code>[data-mise-action]</code> selectors in the author CSS.</div>",
+      "open": { "mode": "cue", "at": 8.0 },
+      "close": { "mode": "none", "at": null },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "paused",
+        "loop": false,
+        "syncWithClock": false,
+        "audienceControl": false,
+        "bar": { "visible": false, "classNames": [] }
+      },
+      "audio": { "initial": "off", "audienceControl": false },
+      "position": { "x": 100, "y": 600 },
+      "size": { "width": 420, "height": 180 },
+      "zIndex": null,
+      "background": false,
+      "classNames": [],
+      "flags": {
+        "movable": true,
+        "resizable": false,
+        "closable": true,
+        "zIndexable": true
+      },
+      "animation": { "enter": "slide-up", "exit": "slide-down" },
+      "mediaFit": "fill",
+      "visible": true
+    },
+    {
+      "id": "text02",
+      "type": "text",
+      "src": null,
+      "content": "<h2>Linked Panel</h2><p>This panel uses the <code>accent-panel</code> class to override the default border and heading color with a green accent, demonstrating per-element CSS customization.</p>",
+      "open": { "mode": "link", "at": 0.0 },
+      "close": { "mode": "userClose", "at": null },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "paused",
+        "loop": false,
+        "syncWithClock": false,
+        "audienceControl": false,
+        "bar": { "visible": false, "classNames": [] }
+      },
+      "audio": { "initial": "off", "audienceControl": false },
+      "position": { "x": 600, "y": 600 },
+      "size": { "width": 420, "height": 180 },
+      "zIndex": null,
+      "background": false,
+      "classNames": ["accent-panel"],
+      "flags": {
+        "movable": true,
+        "resizable": true,
+        "closable": true,
+        "zIndexable": true
+      },
+      "animation": { "enter": "slide-up", "exit": "slide-down" },
+      "mediaFit": "fill",
+      "visible": true
+    },
+    {
+      "id": "video01",
+      "type": "video",
+      "src": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      "content": null,
+      "open": { "mode": "cue", "at": 4.0 },
+      "close": { "mode": "none", "at": null },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "playing",
+        "loop": true,
+        "syncWithClock": false,
+        "audienceControl": false,
+        "bar": { "visible": true, "classNames": [] }
+      },
+      "audio": { "initial": "off", "audienceControl": true },
+      "position": { "x": 1100, "y": 550 },
+      "size": { "width": 640, "height": 360 },
+      "zIndex": null,
+      "background": false,
+      "classNames": [],
+      "flags": {
+        "movable": true,
+        "resizable": true,
+        "closable": true,
+        "zIndexable": true
+      },
+      "animation": { "enter": "entering", "exit": "exiting" },
+      "mediaFit": "fill",
+      "visible": true
+    },
+    {
+      "id": "video02",
+      "type": "video",
+      "src": "https://vimeo.com/879235196",
+      "content": null,
+      "open": { "mode": "cue", "at": 6.0 },
+      "close": { "mode": "none", "at": null },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "playing",
+        "loop": true,
+        "syncWithClock": true,
+        "audienceControl": false,
+        "bar": { "visible": true, "classNames": [] }
+      },
+      "audio": { "initial": "off", "audienceControl": true },
+      "position": { "x": 100, "y": 320 },
+      "size": { "width": 520, "height": 260 },
+      "zIndex": null,
+      "background": false,
+      "classNames": ["rounded-frame"],
+      "flags": {
+        "movable": true,
+        "resizable": true,
+        "closable": true,
+        "zIndexable": true
+      },
+      "animation": { "enter": "entering", "exit": "exiting" },
+      "mediaFit": "fit",
+      "visible": true
+    },
+    {
+      "id": "youtube01",
+      "type": "video",
+      "src": "https://youtu.be/pzfPsB6Mbuk?si=m-DXeQ4MJBWZJJ6u",
+      "content": null,
+      "open": { "mode": "cue", "at": 2.0 },
+      "close": { "mode": "none", "at": null },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "playing",
+        "loop": false,
+        "syncWithClock": true,
+        "audienceControl": false,
+        "bar": { "visible": true, "classNames": [] }
+      },
+      "audio": { "initial": "off", "audienceControl": true },
+      "position": { "x": 680, "y": 300 },
+      "size": { "width": 560, "height": 315 },
+      "zIndex": null,
+      "background": false,
+      "classNames": ["rounded-frame"],
+      "flags": {
+        "movable": true,
+        "resizable": true,
+        "closable": true,
+        "zIndexable": true
+      },
+      "animation": { "enter": "entering", "exit": "exiting" },
+      "mediaFit": "fill",
+      "visible": true
+    },
+    {
+      "id": "audio01",
+      "type": "audio",
+      "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+      "content": null,
+      "open": { "mode": "cue", "at": 3.0 },
+      "close": { "mode": "none", "at": null },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "playing",
+        "loop": true,
+        "syncWithClock": false,
+        "audienceControl": true,
+        "bar": { "visible": false, "classNames": [] }
+      },
+      "audio": { "initial": "off", "audienceControl": true },
+      "position": { "x": 100, "y": 400 },
+      "size": { "width": 160, "height": 80 },
+      "zIndex": null,
+      "background": false,
+      "classNames": [],
+      "flags": {
+        "movable": true,
+        "resizable": false,
+        "closable": false,
+        "zIndexable": true
+      },
+      "animation": { "enter": "entering", "exit": "exiting" },
+      "mediaFit": "fill",
+      "visible": true
+    },
+    {
+      "id": "audio02",
+      "type": "audio",
+      "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+      "content": null,
+      "open": { "mode": "cue", "at": 3.0 },
+      "close": { "mode": "none", "at": null },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "paused",
+        "loop": false,
+        "syncWithClock": true,
+        "audienceControl": true,
+        "bar": { "visible": true, "classNames": [] }
+      },
+      "audio": { "initial": "off", "audienceControl": true },
+      "position": { "x": 100, "y": 520 },
+      "size": { "width": 300, "height": 100 },
+      "zIndex": null,
+      "background": false,
+      "classNames": [],
+      "flags": {
+        "movable": true,
+        "resizable": false,
+        "closable": true,
+        "zIndexable": true
+      },
+      "animation": { "enter": "slide-up", "exit": "slide-down" },
+      "mediaFit": "fill",
+      "visible": true
+    },
+    {
+      "id": "audio-hidden",
+      "type": "audio",
+      "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+      "content": null,
+      "open": { "mode": "cue", "at": 4.0 },
+      "close": { "mode": "none", "at": null },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "playing",
+        "loop": true,
+        "syncWithClock": false,
+        "audienceControl": false,
+        "bar": { "visible": false, "classNames": [] }
+      },
+      "audio": { "initial": "off", "audienceControl": false },
+      "position": { "x": 0, "y": 0 },
+      "size": { "width": 100, "height": 40 },
+      "zIndex": null,
+      "background": false,
+      "classNames": [],
+      "flags": {
+        "movable": false,
+        "resizable": false,
+        "closable": false,
+        "zIndexable": false
+      },
+      "animation": { "enter": "", "exit": "" },
+      "mediaFit": "fill",
+      "visible": false
+    }
+  ]
+}
