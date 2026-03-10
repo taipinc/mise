@@ -5,4 +5,5 @@ export interface ElementRenderer {
   seek(elementTime: number): void;
   pause(): void;
   resume(): void;
+  setGlobalMuted(muted: boolean): void;
 }

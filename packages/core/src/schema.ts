@@ -26,6 +26,7 @@ export const PlaybackBarSchema = z
     showTotalTime: z.boolean().default(false),
     timeCurrentClassNames: z.array(z.string()).default([]),
     timeTotalClassNames: z.array(z.string()).default([]),
+    globalMute: z.boolean().default(false),
   })
   .passthrough();
 

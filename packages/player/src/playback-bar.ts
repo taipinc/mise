@@ -27,12 +27,14 @@ export class PlaybackBar {
   private readonly onSeek: (seconds: number) => void;
   private readonly onPlay: () => void;
   private readonly onPause: () => void;
+  private readonly onGlobalMute: (muted: boolean) => void;
   private readonly interactive: boolean;
   private readonly horizon: number;
   private readonly stageHeight: number;
 
   private barEl: HTMLDivElement;
   private playPauseBtn: HTMLDivElement;
+  private globalMuteBtn: HTMLDivElement | null = null;
   private scrubTrack: HTMLDivElement;
   private playhead: HTMLDivElement;
   private timeCurrentEl: HTMLSpanElement | null = null;
@@ -40,6 +42,7 @@ export class PlaybackBar {
   private readonly duration: number | null;
 
   private isPlaying = false;
+  private isMuted = false;
   private isDragging = false;
   private wasPlayingBeforeDrag = false;
   private barVisible = false;
@@ -50,13 +53,15 @@ export class PlaybackBar {
     composition: MiseComposition,
     onSeek: (seconds: number) => void,
     onPlay: () => void,
-    onPause: () => void
+    onPause: () => void,
+    onGlobalMute: (muted: boolean) => void
   ) {
     this.stageRoot = stageRoot;
     this.clock = clock;
     this.onSeek = onSeek;
     this.onPlay = onPlay;
     this.onPause = onPause;
+    this.onGlobalMute = onGlobalMute;
     this.interactive = composition.stage.playbackBar.interactive;
     this.horizon = computeHorizon(composition);
     this.stageHeight = composition.stage.viewBox.height;
@@ -104,6 +109,14 @@ export class PlaybackBar {
       this.barEl.appendChild(this.timeTotalEl);
     }
 
+    if (pbBar.globalMute) {
+      this.globalMuteBtn = document.createElement("div");
+      this.globalMuteBtn.classList.add("mise-global-mute-btn");
+      this.globalMuteBtn.textContent = "\u266A";
+      this.globalMuteBtn.addEventListener("click", this.onGlobalMuteClick);
+      this.barEl.appendChild(this.globalMuteBtn);
+    }
+
     stageRoot.appendChild(this.barEl);
 
     // Wire events
@@ -137,6 +150,9 @@ export class PlaybackBar {
 
   destroy(): void {
     this.playPauseBtn.removeEventListener("click", this.onPlayPauseClick);
+    if (this.globalMuteBtn) {
+      this.globalMuteBtn.removeEventListener("click", this.onGlobalMuteClick);
+    }
     this.scrubTrack.removeEventListener("pointerdown", this.onTrackPointerDown);
     this.playhead.removeEventListener("pointerdown", this.onPlayheadPointerDown);
     this.playhead.removeEventListener("pointermove", this.onPlayheadPointerMove);
@@ -164,6 +180,20 @@ export class PlaybackBar {
 
   private updatePlayPauseButton(): void {
     this.playPauseBtn.textContent = this.isPlaying ? "\u23F8" : "\u25B6";
+  }
+
+  // --- Global Mute ---
+
+  private onGlobalMuteClick = (): void => {
+    this.isMuted = !this.isMuted;
+    this.updateGlobalMuteButton();
+    this.onGlobalMute(this.isMuted);
+  };
+
+  private updateGlobalMuteButton(): void {
+    if (this.globalMuteBtn) {
+      this.globalMuteBtn.textContent = this.isMuted ? "M" : "\u266A";
+    }
   }
 
   // --- Playhead position ---

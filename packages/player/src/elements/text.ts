@@ -74,4 +74,5 @@ export class TextElement implements ElementRenderer {
   seek(): void {}
   pause(): void {}
   resume(): void {}
+  setGlobalMuted(): void {}
 }

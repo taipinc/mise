@@ -30,7 +30,8 @@
       "showCurrentTime": true,
       "showTotalTime": true,
       "timeCurrentClassNames": [],
-      "timeTotalClassNames": []
+      "timeTotalClassNames": [],
+      "globalMute": true
     }
   },
 
@@ -339,7 +340,7 @@
         "bar": { "visible": false, "classNames": [] }
       },
       "audio": {
-        "initial": "off",
+        "initial": "on",
         "audienceControl": true,
         "fadeIn": 4000,
         "fadeOut": 1000

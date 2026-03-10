@@ -338,6 +338,21 @@
   cursor: grabbing;
 }
 
+/* --- Global mute button (inside playback bar) --- */
+
+.mise-global-mute-btn {
+  width: 40px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  font-size: 12px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
 /* --- Time displays --- */
 
 .mise-time-current,
