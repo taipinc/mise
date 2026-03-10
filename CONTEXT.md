@@ -211,7 +211,12 @@ A composition with multiple video elements (each with `muted` toggled differentl
 - [x] Provide a default CSS theme for the all elements (default.css)
 - [x] Build and test audio elements with Tone.js
 - [x] Support for additional video and audio providers (YouTube, direct URLs)
-- [ ] Support for optional playback time display
+- [x] Support for optional playback time display
+- [ ] Global Mute/Unmute control for all audio elements
+- [ ] Audio element with no visual presence (visibility: "hidden")
+- [ ] Audio element with in and out transitions
+- [ ] Video element with in and out transitions for the audio track only
+- [ ] Blending modes for elements (multiply, screen, etc.)
 
 ### Phase 2 — Minimal Editor
 

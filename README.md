@@ -6,6 +6,8 @@ The name comes from *mise-en-scène* — the art of placing and arranging everyt
 
 Think of it as a video editor whose output is not a rendered video file, but a living, interactive webpage. A sequence of independent media and UI elements — video, audio, image, text, and custom components — arranged on a timeline and displayed on a stage. Because the output runs in a browser, elements remain independent objects: interactive, resizable, movable, and fully styleable with CSS. Nothing gets baked into a flat file.
 
+**Mise** is inspired by the works of artists such as Basel Abbas and Ruanne Abou-Rahme ([May amensia never kiss us on the mouth](https://mayamnesia.diaart.org/postscript)), Lawrence Abu Hamdan ([Air Pressure](https://www.airpressure.info/on-the-ground/), Zach Blas ([576 Tears](https://576tears.ai/)), Lama Suleiman ([Parallax Haifa](https://palestineinbetween.com/PARALLAX-HAIFA)), and others.
+
 ---
 
 ## How It Works
