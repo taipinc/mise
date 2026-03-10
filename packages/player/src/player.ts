@@ -185,14 +185,19 @@ export class MisePlayer {
 
 
   private handleAction(action: string): void {
-    const match = action.match(/^(open|close):(.+)$/);
+    const match = action.match(/^(open|close|seek):(.+)$/);
     if (!match) return;
 
-    const [, verb, targetId] = match;
+    const [, verb, value] = match;
     if (verb === "open") {
-      this.onElementOpen(targetId);
+      this.onElementOpen(value);
     } else if (verb === "close") {
-      this.onElementClose(targetId);
+      this.onElementClose(value);
+    } else if (verb === "seek") {
+      const seconds = Number(value);
+      if (Number.isFinite(seconds)) {
+        this.seek(seconds);
+      }
     }
   }
 
