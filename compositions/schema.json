@@ -29,7 +29,12 @@
     "playbackBar": {
       "visible": true,
       "interactive": true,
-      "classNames": []
+      "classNames": [],
+      "showCurrentTime": false,
+      "showTotalTime": false,
+      "timeCurrentClassNames": [],
+      "timeTotalClassNames": [],
+      "globalMute": false
     }
   },
 
@@ -66,7 +71,9 @@
 
       "audio": {
         "initial": "on | off",
-        "audienceControl": true
+        "audienceControl": true,
+        "fadeIn": 0,
+        "fadeOut": 0
       },
 
       "position": {
@@ -96,6 +103,9 @@
         "enter": "entering",
         "exit": "exiting"
       },
+
+      "visible": true,
+      "_visible_comment": "Whether the element has a visible DOM wrapper. When false, the element produces audio only with no visual presence. Default: true.",
 
       "mediaFit": "fit | fill",
       "_mediaFit_comment": "Controls how media fills its box. 'fit' = object-fit: contain (no crop, may letterbox). 'fill' = object-fit: cover (fills box, crops if needed). Never stretches. Default: 'fill'. Applies to image and video types only."

@@ -84,8 +84,8 @@ export const ElementPlaybackSchema = z.object({
 export const ElementAudioSchema = z.object({
   initial: z.union([z.literal("on"), z.literal("off")]),
   audienceControl: z.boolean(),
-  fadeIn: z.number().default(0).optional(),
-  fadeOut: z.number().default(0).optional(),
+  fadeIn: z.number().optional().default(0),
+  fadeOut: z.number().optional().default(0),
 });
 
 export const PositionSchema = z
@@ -139,8 +139,8 @@ export const ElementSchema = z
     classNames: z.array(z.string()),
     flags: FlagsSchema,
     animation: AnimationSchema,
-    mediaFit: z.enum(["fit", "fill"]).default("fill").optional(),
-    visible: z.boolean().default(true).optional(),
+    mediaFit: z.enum(["fit", "fill"]).optional().default("fill"),
+    visible: z.boolean().optional().default(true),
   })
   .passthrough();
 
