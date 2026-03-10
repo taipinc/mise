@@ -69,6 +69,11 @@ The optional audience-facing transport control rendered at the bottom of the sta
 | `visible` | `boolean` | `true` | Whether the Playback Bar is rendered at all. |
 | `interactive` | `boolean` | `true` | When `true`, the audience can click to seek and drag the playhead. When `false`, the bar is a read-only progress indicator. |
 | `classNames` | `string[]` | `[]` | CSS class names applied to the `.mise-playback-bar` element. Use these in the `stage.styles` CSS string to style the bar. |
+| `showCurrentTime` | `boolean` | `false` | When `true`, the bar displays the current playback time. |
+| `showTotalTime` | `boolean` | `false` | When `true`, the bar displays the total composition duration (or `∞` if open-ended). |
+| `timeCurrentClassNames` | `string[]` | `[]` | CSS class names applied to the current-time display element. |
+| `timeTotalClassNames` | `string[]` | `[]` | CSS class names applied to the total-time display element. |
+| `globalMute` | `boolean` | `false` | When `true`, the bar renders a global mute/unmute toggle that silences all audio-producing elements at once. |
 
 ---
 
@@ -96,6 +101,7 @@ These fields apply to all element types.
 | `classNames` | `string[]` | `[]` | CSS class names applied to the element's wrapper div. Use these in `stage.styles` to style the element. |
 | `flags` | `Flags` | — | Interaction behaviors available to the audience. |
 | `animation` | `Animation` | — | CSS class names injected at mount and unmount for enter/exit transitions. |
+| `visible` | `boolean` | `true` | Whether the element has a visible DOM wrapper. When `false`, the element produces audio only with no visual presence on the stage. Useful for background audio tracks. |
 | `mediaFit` | `"fit" \| "fill"` | `"fill"` | Controls how media fills its element box. `"fit"` = `object-fit: contain` (media constrained within the box, no crop, may letterbox). `"fill"` = `object-fit: cover` (media fills the box, cropped if needed). Never stretches. Applies to `image` and `video` types only. |
 
 ### ElementOpen
@@ -103,7 +109,7 @@ These fields apply to all element types.
 | Field | Type | Description |
 |---|---|---|
 | `mode` | `"cue" \| "link" \| "both"` | `"cue"`: element opens when the Clock reaches `at`. `"link"`: element opens only when triggered by a `data-mise-action` on another element. `"both"`: either condition can open it. |
-| `at` | `number \| null` | The Clock time in seconds at which this element opens. Required when `mode` is `"cue"` or `"both"`. |
+| `at` | `number` | The Clock time in seconds at which this element opens. For `"link"` mode elements, use `0`. |
 
 ### ElementClose
 
@@ -133,6 +139,8 @@ Applies to `video` and `audio` elements only.
 |---|---|---|---|
 | `initial` | `"on" \| "off"` | `"on"` | Whether the element starts with audio on or muted. |
 | `audienceControl` | `boolean` | `false` | When `true`, the player renders a mute/unmute toggle button on the element. The button is fully styleable via CSS. |
+| `fadeIn` | `number` | `0` | Duration in milliseconds over which the audio volume ramps from 0 to 1 when the element mounts. `0` means no fade. |
+| `fadeOut` | `number` | `0` | Duration in milliseconds over which the audio volume ramps from current to 0 when the element unmounts. `0` means no fade. |
 
 ### Position
 
@@ -190,8 +198,8 @@ Inside the `content` HTML of `text` and `component` elements, any element with a
 | Value | Effect |
 |---|---|
 | `"open:element-id"` | Opens the element with the matching `id`. |
-| `"close:element-id"` | *(Phase 4)* Closes the element with the matching `id`. |
-| `"seek:90"` | *(Phase 4)* Seeks the Clock to the given time in seconds. |
+| `"close:element-id"` | *(Not yet implemented)* Closes the element with the matching `id`. |
+| `"seek:90"` | Seeks the Clock to the given time in seconds. |
 
 **Example:**
 ```html
@@ -213,7 +221,13 @@ These class names are applied by the player to its rendered UI elements. Authors
 | `.mise-title-bar` | The drag handle bar at the top of elements (when `movable`, `closable`, or `zIndexable`). |
 | `.mise-close-btn` | The close button inside the title bar (when `flags.closable` is `true`). |
 | `.mise-resize-handle` | The resize handle at the bottom-right corner (when `flags.resizable` is `true`). |
+| `.mise-element-playbar` | Per-element transport bar (when `playback.bar.visible` is `true`). |
+| `.mise-mute-btn` | Per-element mute/unmute toggle (when `audio.audienceControl` is `true`). |
+| `.mise-audio-icon` | The music-note icon inside audio element bodies. |
 | `.mise-playback-bar` | The stage Playback Bar container. |
-| `.mise-scrub-track` | The scrub track inside the Playback Bar. |
-| `.mise-playhead` | The playhead inside the Playback Bar. |
-| `.mise-play-pause-btn` | The play/pause button inside the Playback Bar. |
+| `.mise-scrub-track` | The scrub track inside playback bars (both stage and element level). |
+| `.mise-playhead` | The draggable playhead inside scrub tracks. |
+| `.mise-play-pause-btn` | Play/pause button inside playback bars. |
+| `.mise-global-mute-btn` | Global mute toggle inside the stage Playback Bar (when `playbackBar.globalMute` is `true`). |
+| `.mise-time-current` | Current time display in the stage Playback Bar. |
+| `.mise-time-total` | Total time display in the stage Playback Bar. |

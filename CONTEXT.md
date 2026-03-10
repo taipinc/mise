@@ -235,7 +235,7 @@ A composition with multiple video elements (each with `muted` toggled differentl
 
 - [x] Design element link schema (trigger → target element ID)
 - [x] Implement link-triggered element opening in the player
-- [ ] Support \data-mise-action="seek:N" in component/text elements to jump the Clock to a specific timestamp
+- [x] Support \data-mise-action="seek:N" in component/text elements to jump the Clock to a specific timestamp
 - [ ] State variables in project JSON
 - [ ] Conditional element visibility
 
@@ -267,6 +267,35 @@ Mise does **not** host media. All assets are externally linked:
 - Audio, images: any CDN, Cloudflare R2, S3, etc.
 
 The project file (JSON) is small and can live anywhere — a GitHub Gist, a CDN, a personal server. The player is a static bundle. Self-hosting requires no server-side infrastructure.
+
+---
+
+## Authoring & Deployment
+
+### The Player Bundle
+
+The player compiles to a single JavaScript file that can be embedded in any webpage — no framework, no build step required:
+
+```html
+<div data-mise-project="https://your-cdn.com/my-composition.json"></div>
+<script src="https://mise.app/player.js"></script>
+```
+
+Anyone using a site builder that allows raw HTML can embed a Mise composition this way. Alternatively, compositions can be loaded via standalone URL (`mise.app/play?project=https://...`) or the JavaScript API (`new Mise('#container').load('https://...')`).
+
+---
+
+### Authoring & Export Paths
+
+These are not mutually exclusive — they represent a spectrum of friction, all supported by the same underlying architecture:
+
+**Write JSON directly** — Author the project file by hand against the schema. Host it anywhere (GitHub Gist, CDN, static server) and load it via the player.
+
+**Run the editor locally** — Clone the repo, run the editor, author visually, export JSON. Host the JSON and player bundle on any static host.
+
+**Hosted editor → export HTML** — The player and JSON are baked into a single self-contained HTML file. Drop it anywhere and it runs with no configuration.
+
+**Hosted editor → publish URL** — The project JSON is stored on Mise infrastructure and the author receives a shareable live URL. Requires Mise to store project files (small — no media is stored).
 
 ---
 
@@ -351,7 +380,7 @@ This is not a limitation to engineer around. It is a characteristic of the mediu
 - ~~Three types of "timeline" — are they distinct?~~ Yes: The Clock, The Playback Bar, The Edit Timeline. Defined and named above.
 - ~~Clock/element sync when seeking~~ — Default rule: when the Clock seeks to T, each synced element seeks to `T - element.open.at` seconds into its own media. If negative, element stays closed. If beyond element duration, shows last frame (or loops if `loop: true`). Authors set `playback.syncWithClock: false` for ambient/independent elements.
 - ~~Multiple instances on one page~~ — Each player instance gets its own isolated Clock and Web Audio context. Shadow DOM handles CSS. Treat each instance like an independent iframe-equivalent.
-- ~~Element links: how defined?~~ — Custom HTML data attribute inside `text` and `component` content: `<button data-mise-open="target-element-id">`. The player watches for clicks on any element with `data-mise-open` and opens the matching element. No JavaScript needed in the content.
+- ~~Element links: how defined?~~ — Custom HTML data attribute inside `text` and `component` content: `<button data-mise-action="open:target-element-id">`. The player watches for clicks on any element with `data-mise-action` and dispatches the action. No JavaScript needed in the content.
 - ~~Security: HTML content in `component` and `text`~~ — HTML-without-JS still carries risks (form submission, CSS exfiltration, meta redirects). Use DOMPurify to sanitize against a safe allowlist. Self-hosted authors can opt into trust mode. This is equivalent to running user-generated content on any web platform, not merely browsing a website.
 - ~~Schema versioning~~ — Add `"version": "0.1"` to every project file from day one. No migration logic needed yet — just reserve the field so the player can read it when schema changes happen later.
 - ~~How does the player load a project?~~ — Three supported modes, all valid: (1) HTML embed via data attribute on a div; (2) standalone URL with `?project=https://...` query param; (3) JavaScript API `new Mise('#container').load('https://...')`. These cover self-hosting, link-sharing, and developer integration.
