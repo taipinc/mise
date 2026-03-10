@@ -25,6 +25,8 @@ export class AudioElement implements ElementRenderer {
   private flagsCleanup: FlagsCleanup | null = null;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private fadeTimer: ReturnType<typeof setInterval> | null = null;
+  private perElementMuted: boolean = false;
+  private globalMuted: boolean = false;
   readonly syncWithClock: boolean;
 
   constructor(element: MiseElement, stageRoot: HTMLDivElement, onClose?: () => void) {
@@ -41,7 +43,8 @@ export class AudioElement implements ElementRenderer {
     audio.src = el.src ?? "";
     audio.preload = "auto";
     if (el.playback?.loop) audio.loop = true;
-    if (el.audio?.initial === "off") audio.muted = true;
+    this.perElementMuted = el.audio?.initial === "off";
+    if (this.perElementMuted || this.globalMuted) audio.muted = true;
     this.audioEl = audio;
 
     // Set initial volume for fade-in: start at 0 so the ramp is audible
@@ -116,7 +119,8 @@ export class AudioElement implements ElementRenderer {
         this.muteButton = createMuteButton(
           el.audio?.initial === "off",
           (muted) => {
-            if (this.audioEl) this.audioEl.muted = muted;
+            this.perElementMuted = muted;
+            if (this.audioEl) this.audioEl.muted = this.perElementMuted || this.globalMuted;
           }
         );
         controls.appendChild(this.muteButton.element);
@@ -220,6 +224,13 @@ export class AudioElement implements ElementRenderer {
     if (!this.syncWithClock || !this.audioEl) return;
     this.audioEl.play().catch(() => {});
     this.playPauseButton?.setPlaying(true);
+  }
+
+  setGlobalMuted(muted: boolean): void {
+    this.globalMuted = muted;
+    if (this.audioEl) {
+      this.audioEl.muted = this.perElementMuted || this.globalMuted;
+    }
   }
 
   // --- Volume fade helpers ---

@@ -133,6 +133,8 @@ export class VideoElement implements ElementRenderer {
   private elementPlaybar: ElementPlaybar | null = null;
   private playbarPollTimer: ReturnType<typeof setInterval> | null = null;
   private fadeTimer: ReturnType<typeof setInterval> | null = null;
+  private perElementMuted: boolean = false;
+  private globalMuted: boolean = false;
   readonly syncWithClock: boolean;
 
   constructor(element: MiseElement, stageRoot: HTMLDivElement, onClose?: () => void) {
@@ -148,6 +150,7 @@ export class VideoElement implements ElementRenderer {
 
     const wantsAutoplay = el.playback?.initial === "playing";
     const wantsMuted = el.audio?.initial === "off";
+    this.perElementMuted = wantsMuted;
 
     // Shared wrapper + body + clipContainer
     const wrapper = document.createElement("div");
@@ -186,7 +189,10 @@ export class VideoElement implements ElementRenderer {
     if (el.audio?.audienceControl) {
       this.muteButton = createMuteButton(
         wantsMuted,
-        (muted) => this.setMuted(muted)
+        (muted) => {
+          this.perElementMuted = muted;
+          this.applyMuteState();
+        }
       );
       wrapper.appendChild(this.muteButton.element);
     }
@@ -519,18 +525,24 @@ export class VideoElement implements ElementRenderer {
     }, 250);
   }
 
-  private setMuted(muted: boolean): void {
+  private applyMuteState(): void {
+    const effectiveMuted = this.perElementMuted || this.globalMuted;
     if (this.vimeoPlayer) {
-      this.vimeoPlayer.setVolume(muted ? 0 : 1).catch(() => {});
+      this.vimeoPlayer.setVolume(effectiveMuted ? 0 : 1).catch(() => {});
     } else if (this.ytPlayer) {
-      if (muted) {
+      if (effectiveMuted) {
         this.ytPlayer.mute();
       } else {
         this.ytPlayer.unMute();
       }
     } else if (this.nativeVideo) {
-      this.nativeVideo.muted = muted;
+      this.nativeVideo.muted = effectiveMuted;
     }
+  }
+
+  setGlobalMuted(muted: boolean): void {
+    this.globalMuted = muted;
+    this.applyMuteState();
   }
 
   unmount(): void {

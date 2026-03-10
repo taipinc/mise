@@ -16,6 +16,7 @@ export class MisePlayer {
   private readonly mountedElements: Map<string, ElementRenderer> = new Map();
   private readonly userClosedElements: Set<string> = new Set();
   private readonly playbackBar: PlaybackBar | null = null;
+  private globalMuted: boolean = false;
 
   constructor(host: HTMLElement, composition: MiseComposition) {
     this.composition = composition;
@@ -37,7 +38,8 @@ export class MisePlayer {
         composition,
         (seconds) => this.seek(seconds),
         () => this.play(),
-        () => this.pause()
+        () => this.pause(),
+        (muted) => this.setGlobalMuted(muted)
       );
     }
   }
@@ -145,6 +147,9 @@ export class MisePlayer {
     if (!renderer) return;
 
     renderer.mount();
+    if (this.globalMuted) {
+      renderer.setGlobalMuted(true);
+    }
     this.mountedElements.set(elementId, renderer);
 
     const wrapper = this.stage.root.querySelector(
@@ -214,6 +219,13 @@ export class MisePlayer {
       if (renderer.syncWithClock) {
         renderer.resume();
       }
+    }
+  }
+
+  private setGlobalMuted(muted: boolean): void {
+    this.globalMuted = muted;
+    for (const renderer of this.mountedElements.values()) {
+      renderer.setGlobalMuted(muted);
     }
   }
 
