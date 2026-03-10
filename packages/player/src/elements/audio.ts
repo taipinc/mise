@@ -11,6 +11,8 @@ import {
 import { applyFlags, type FlagsCleanup } from "./flags";
 import { applyAnimation } from "./animation";
 
+const FADE_STEP_MS = 50;
+
 export class AudioElement implements ElementRenderer {
   private readonly element: MiseElement;
   private readonly stageRoot: HTMLDivElement;
@@ -22,6 +24,7 @@ export class AudioElement implements ElementRenderer {
   private scrubTrack: ScrubTrack | null = null;
   private flagsCleanup: FlagsCleanup | null = null;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
+  private fadeTimer: ReturnType<typeof setInterval> | null = null;
   readonly syncWithClock: boolean;
 
   constructor(element: MiseElement, stageRoot: HTMLDivElement, onClose?: () => void) {
@@ -40,6 +43,12 @@ export class AudioElement implements ElementRenderer {
     if (el.playback?.loop) audio.loop = true;
     if (el.audio?.initial === "off") audio.muted = true;
     this.audioEl = audio;
+
+    // Set initial volume for fade-in: start at 0 so the ramp is audible
+    const fadeInMs = el.audio?.fadeIn ?? 0;
+    if (fadeInMs > 0) {
+      audio.volume = 0;
+    }
 
     const wantsPlay = el.playback?.initial === "playing";
 
@@ -133,12 +142,17 @@ export class AudioElement implements ElementRenderer {
       audio.load();
       const tryPlay = (): void => {
         audio.play().catch(() => {});
+        this.startFadeIn();
       };
       if (audio.readyState >= 2) {
         tryPlay();
       } else {
         audio.addEventListener("canplay", tryPlay, { once: true });
       }
+    } else if (fadeInMs > 0) {
+      // Not autoplaying but fade-in is set — ramp will start when
+      // audience manually hits play (volume is already at 0)
+      this.startFadeIn();
     }
   }
 
@@ -163,11 +177,26 @@ export class AudioElement implements ElementRenderer {
       this.flagsCleanup.destroy();
       this.flagsCleanup = null;
     }
-    if (this.audioEl) {
-      this.audioEl.pause();
-      this.audioEl.src = "";
-      this.audioEl = null;
+
+    const fadeOutMs = this.element.audio?.fadeOut ?? 0;
+
+    const cleanupAudio = (): void => {
+      if (this.audioEl) {
+        this.audioEl.pause();
+        this.audioEl.src = "";
+        this.audioEl = null;
+      }
+    };
+
+    if (fadeOutMs > 0 && this.audioEl) {
+      this.startFadeOut(() => {
+        cleanupAudio();
+      });
+    } else {
+      cleanupAudio();
     }
+
+    // CSS exit animation runs in parallel with volume fade
     if (this.wrapper) {
       applyAnimation(this.wrapper, this.element.animation.exit, () => {
         this.wrapper?.remove();
@@ -191,5 +220,80 @@ export class AudioElement implements ElementRenderer {
     if (!this.syncWithClock || !this.audioEl) return;
     this.audioEl.play().catch(() => {});
     this.playPauseButton?.setPlaying(true);
+  }
+
+  // --- Volume fade helpers ---
+
+  private cancelFade(): void {
+    if (this.fadeTimer !== null) {
+      clearInterval(this.fadeTimer);
+      this.fadeTimer = null;
+    }
+  }
+
+  private startFadeIn(): void {
+    const fadeInMs = this.element.audio?.fadeIn ?? 0;
+    if (fadeInMs <= 0 || !this.audioEl) return;
+
+    this.cancelFade();
+
+    const audio = this.audioEl;
+    const steps = Math.max(1, Math.floor(fadeInMs / FADE_STEP_MS));
+    const stepDuration = fadeInMs / steps;
+    const volumeStep = 1 / steps;
+    let currentStep = 0;
+
+    this.fadeTimer = setInterval(() => {
+      currentStep++;
+      if (currentStep >= steps || !this.audioEl) {
+        if (this.audioEl) this.audioEl.volume = 1;
+        this.cancelFade();
+        return;
+      }
+      audio.volume = Math.min(1, volumeStep * currentStep);
+    }, stepDuration);
+  }
+
+  private startFadeOut(onComplete: () => void): void {
+    this.cancelFade();
+
+    const fadeOutMs = this.element.audio?.fadeOut ?? 0;
+    if (fadeOutMs <= 0 || !this.audioEl) {
+      onComplete();
+      return;
+    }
+
+    const audio = this.audioEl;
+    const startVolume = audio.volume;
+    if (startVolume <= 0) {
+      onComplete();
+      return;
+    }
+
+    const steps = Math.max(1, Math.floor(fadeOutMs / FADE_STEP_MS));
+    const stepDuration = fadeOutMs / steps;
+    const volumeStep = startVolume / steps;
+    let currentStep = 0;
+    let done = false;
+
+    const finish = (): void => {
+      if (done) return;
+      done = true;
+      this.cancelFade();
+      if (this.audioEl) this.audioEl.volume = 0;
+      onComplete();
+    };
+
+    this.fadeTimer = setInterval(() => {
+      currentStep++;
+      if (currentStep >= steps || !this.audioEl) {
+        finish();
+        return;
+      }
+      audio.volume = Math.max(0, startVolume - volumeStep * currentStep);
+    }, stepDuration);
+
+    // Safety timeout — same pattern as animation.exit
+    setTimeout(finish, fadeOutMs + 100);
   }
 }
