@@ -83,6 +83,8 @@ export const ElementPlaybackSchema = z.object({
 export const ElementAudioSchema = z.object({
   initial: z.union([z.literal("on"), z.literal("off")]),
   audienceControl: z.boolean(),
+  fadeIn: z.number().default(0).optional(),
+  fadeOut: z.number().default(0).optional(),
 });
 
 export const PositionSchema = z
