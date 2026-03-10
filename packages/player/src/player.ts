@@ -151,6 +151,15 @@ export class MisePlayer {
       `[data-mise-id="${elementId}"]`
     ) as HTMLElement | null;
 
+    if (wrapper && el.visible === false) {
+      // Strip any enter animation class so it can't flash visible
+      if (el.animation.enter) {
+        wrapper.classList.remove(el.animation.enter);
+      }
+      wrapper.style.opacity = "0";
+      wrapper.style.pointerEvents = "none";
+    }
+
     if (wrapper) {
       if (el.background) {
         // Background pinning: force z-index 0, prevent zIndexable from raising

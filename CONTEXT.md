@@ -216,7 +216,6 @@ A composition with multiple video elements (each with `muted` toggled differentl
 - [ ] Audio element with no visual presence (visibility: "hidden")
 - [ ] Audio element with in and out transitions
 - [ ] Video element with in and out transitions for the audio track only
-- [ ] Blending modes for elements (multiply, screen, etc.)
 
 ### Phase 2 — Minimal Editor
 
@@ -256,6 +255,8 @@ A composition with multiple video elements (each with `muted` toggled differentl
 - [ ] Develop the OS desktop aesthetic as a reference CSS theme (pushed for later consideration)
 - [ ] Publish community CSS theme format spec (pushed for later consideration)
 - [ ] Add `graphic` element type (SVG-based) (pushed for later consideration)
+- [ ] Blending modes for elements (multiply, screen, etc.)
+
 
 ---
 

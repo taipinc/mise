@@ -137,6 +137,7 @@ export const ElementSchema = z
     flags: FlagsSchema,
     animation: AnimationSchema,
     mediaFit: z.enum(["fit", "fill"]).default("fill").optional(),
+    visible: z.boolean().default(true).optional(),
   })
   .passthrough();
 
