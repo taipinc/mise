@@ -430,6 +430,42 @@
       "animation": { "enter": "", "exit": "" },
       "mediaFit": "fill",
       "visible": false
+    },
+    {
+      "id": "seek-controls",
+      "type": "component",
+      "src": null,
+      "content": "<div><strong>Seek Controls</strong><br><br><span data-mise-action='seek:3'>Jump to 0:03</span> &nbsp;|&nbsp; <span data-mise-action='seek:20'>Jump to 0:20</span></div>",
+      "open": { "mode": "cue", "at": 0.0 },
+      "close": { "mode": "none", "at": null },
+      "persistOnLoop": false,
+      "playback": {
+        "initial": "paused",
+        "loop": false,
+        "syncWithClock": false,
+        "audienceControl": false,
+        "bar": { "visible": false, "classNames": [] }
+      },
+      "audio": {
+        "initial": "off",
+        "audienceControl": false,
+        "fadeIn": 0,
+        "fadeOut": 0
+      },
+      "position": { "x": 700, "y": 30 },
+      "size": { "width": 350, "height": 100 },
+      "zIndex": 100,
+      "background": false,
+      "classNames": [],
+      "flags": {
+        "movable": true,
+        "resizable": false,
+        "closable": false,
+        "zIndexable": true
+      },
+      "animation": { "enter": "entering", "exit": "exiting" },
+      "mediaFit": "fill",
+      "visible": true
     }
   ]
 }
