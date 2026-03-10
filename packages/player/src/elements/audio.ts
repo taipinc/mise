@@ -2,11 +2,9 @@ import type { MiseElement } from "@mise/core";
 import type { ElementRenderer } from "./renderer";
 import {
   createMuteButton,
-  createPlayPauseButton,
-  createScrubTrack,
+  createElementPlaybar,
   type MuteButton,
-  type PlayPauseButton,
-  type ScrubTrack,
+  type ElementPlaybar,
 } from "./controls";
 import { applyFlags, type FlagsCleanup } from "./flags";
 import { applyAnimation } from "./animation";
@@ -20,10 +18,9 @@ export class AudioElement implements ElementRenderer {
   private audioEl: HTMLAudioElement | null = null;
   private wrapper: HTMLDivElement | null = null;
   private muteButton: MuteButton | null = null;
-  private playPauseButton: PlayPauseButton | null = null;
-  private scrubTrack: ScrubTrack | null = null;
+  private elementPlaybar: ElementPlaybar | null = null;
   private flagsCleanup: FlagsCleanup | null = null;
-  private pollTimer: ReturnType<typeof setInterval> | null = null;
+  private playbarPollTimer: ReturnType<typeof setInterval> | null = null;
   private fadeTimer: ReturnType<typeof setInterval> | null = null;
   private perElementMuted: boolean = false;
   private globalMuted: boolean = false;
@@ -80,55 +77,6 @@ export class AudioElement implements ElementRenderer {
     icon.textContent = "\u266A";
     body.appendChild(icon);
 
-    // Controls row
-    const hasPlayPause = el.playback?.audienceControl;
-    const hasScrub = el.playback?.bar?.visible;
-    const hasMute = el.audio?.audienceControl;
-
-    if (hasPlayPause || hasScrub || hasMute) {
-      const controls = document.createElement("div");
-      controls.classList.add("mise-audio-controls");
-
-      if (hasPlayPause || hasScrub) {
-        this.playPauseButton = createPlayPauseButton(wantsPlay, (playing) => {
-          if (!this.audioEl) return;
-          if (playing) {
-            this.audioEl.play().catch(() => {});
-          } else {
-            this.audioEl.pause();
-          }
-        });
-        controls.appendChild(this.playPauseButton.element);
-      }
-
-      if (hasScrub) {
-        this.scrubTrack = createScrubTrack((fraction) => {
-          if (!this.audioEl || !this.audioEl.duration) return;
-          this.audioEl.currentTime = fraction * this.audioEl.duration;
-        });
-        controls.appendChild(this.scrubTrack.element);
-
-        // Poll currentTime to update scrub position
-        this.pollTimer = setInterval(() => {
-          if (!this.audioEl || !this.scrubTrack || !this.audioEl.duration) return;
-          this.scrubTrack.update(this.audioEl.currentTime / this.audioEl.duration);
-        }, 250);
-      }
-
-      if (hasMute) {
-        this.muteButton = createMuteButton(
-          el.audio?.initial === "off",
-          (muted) => {
-            this.perElementMuted = muted;
-            if (this.audioEl) this.audioEl.muted = this.perElementMuted || this.globalMuted;
-          }
-        );
-        controls.appendChild(this.muteButton.element);
-      }
-
-      body.appendChild(controls);
-    }
-
     wrapper.appendChild(body);
     this.stageRoot.appendChild(wrapper);
     this.wrapper = wrapper;
@@ -140,9 +88,40 @@ export class AudioElement implements ElementRenderer {
       this.onCloseCallback?.();
     });
 
+    // Overlay controls — same pattern as video element
+    if (el.audio?.audienceControl) {
+      this.muteButton = createMuteButton(
+        this.perElementMuted,
+        (muted) => {
+          this.perElementMuted = muted;
+          if (this.audioEl) this.audioEl.muted = this.perElementMuted || this.globalMuted;
+        }
+      );
+      wrapper.appendChild(this.muteButton.element);
+    }
+
+    if (el.playback?.bar?.visible || el.playback?.audienceControl) {
+      this.elementPlaybar = createElementPlaybar(
+        wantsPlay,
+        el.playback?.bar?.classNames ?? [],
+        (playing) => {
+          if (!this.audioEl) return;
+          if (playing) {
+            this.audioEl.play().catch(() => {});
+          } else {
+            this.audioEl.pause();
+          }
+        },
+        (fraction) => {
+          if (!this.audioEl || !this.audioEl.duration) return;
+          this.audioEl.currentTime = fraction * this.audioEl.duration;
+        }
+      );
+      wrapper.appendChild(this.elementPlaybar.element);
+      this.startPlaybarPolling();
+    }
+
     if (wantsPlay) {
-      // Wait for enough data before playing — some browsers won't load
-      // audio that isn't in the DOM until explicitly triggered
       audio.load();
       const tryPlay = (): void => {
         audio.play().catch(() => {});
@@ -154,28 +133,33 @@ export class AudioElement implements ElementRenderer {
         audio.addEventListener("canplay", tryPlay, { once: true });
       }
     } else if (fadeInMs > 0) {
-      // Not autoplaying but fade-in is set — ramp will start when
-      // audience manually hits play (volume is already at 0)
       this.startFadeIn();
     }
   }
 
+  private startPlaybarPolling(): void {
+    if (!this.elementPlaybar) return;
+    this.playbarPollTimer = setInterval(() => {
+      if (!this.elementPlaybar || !this.audioEl) return;
+      const dur = this.audioEl.duration;
+      if (dur && isFinite(dur)) {
+        this.elementPlaybar.update(this.audioEl.currentTime / dur);
+      }
+    }, 250);
+  }
+
   unmount(): void {
-    if (this.pollTimer !== null) {
-      clearInterval(this.pollTimer);
-      this.pollTimer = null;
+    if (this.playbarPollTimer !== null) {
+      clearInterval(this.playbarPollTimer);
+      this.playbarPollTimer = null;
     }
     if (this.muteButton) {
       this.muteButton.destroy();
       this.muteButton = null;
     }
-    if (this.playPauseButton) {
-      this.playPauseButton.destroy();
-      this.playPauseButton = null;
-    }
-    if (this.scrubTrack) {
-      this.scrubTrack.destroy();
-      this.scrubTrack = null;
+    if (this.elementPlaybar) {
+      this.elementPlaybar.destroy();
+      this.elementPlaybar = null;
     }
     if (this.flagsCleanup) {
       this.flagsCleanup.destroy();
@@ -217,13 +201,13 @@ export class AudioElement implements ElementRenderer {
   pause(): void {
     if (!this.syncWithClock || !this.audioEl) return;
     this.audioEl.pause();
-    this.playPauseButton?.setPlaying(false);
+    this.elementPlaybar?.setPlaying(false);
   }
 
   resume(): void {
     if (!this.syncWithClock || !this.audioEl) return;
     this.audioEl.play().catch(() => {});
-    this.playPauseButton?.setPlaying(true);
+    this.elementPlaybar?.setPlaying(true);
   }
 
   setGlobalMuted(muted: boolean): void {

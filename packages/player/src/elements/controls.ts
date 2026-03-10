@@ -54,12 +54,12 @@ export function createPlayPauseButton(
 
   const btn = document.createElement("div");
   btn.classList.add("mise-play-pause-btn");
-  btn.textContent = playing ? "\u275A\u275A" : "\u25B6";
+  btn.textContent = playing ? "\u23F8" : "\u25B6";
 
   const onClick = (e: Event): void => {
     e.stopPropagation();
     playing = !playing;
-    btn.textContent = playing ? "\u275A\u275A" : "\u25B6";
+    btn.textContent = playing ? "\u23F8" : "\u25B6";
     onToggle(playing);
   };
 
@@ -69,7 +69,7 @@ export function createPlayPauseButton(
     element: btn,
     setPlaying(value: boolean): void {
       playing = value;
-      btn.textContent = playing ? "\u275A\u275A" : "\u25B6";
+      btn.textContent = playing ? "\u23F8" : "\u25B6";
     },
     destroy(): void {
       btn.removeEventListener("click", onClick);
@@ -135,25 +135,26 @@ export function createScrubTrack(
   const track = document.createElement("div");
   track.classList.add("mise-scrub-track");
 
-  const fill = document.createElement("div");
-  fill.classList.add("mise-scrub-fill");
-  track.appendChild(fill);
-
-  const knob = document.createElement("div");
-  knob.classList.add("mise-scrub-knob");
-  track.appendChild(knob);
+  const playhead = document.createElement("div");
+  playhead.classList.add("mise-playhead");
+  track.appendChild(playhead);
 
   let dragging = false;
 
   const fractionFromEvent = (e: PointerEvent): number => {
     const rect = track.getBoundingClientRect();
-    return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const scale = rect.width / (track.offsetWidth || rect.width);
+    const phW = playhead.offsetWidth || 20;
+    const maxLeft = track.offsetWidth - phW;
+    if (maxLeft <= 0) return 0;
+    const x = (e.clientX - rect.left) / scale;
+    return Math.max(0, Math.min(1, x / maxLeft));
   };
 
   const onPointerDown = (e: PointerEvent): void => {
     e.preventDefault();
     e.stopPropagation();
-    track.setPointerCapture(e.pointerId);
+    playhead.setPointerCapture(e.pointerId);
     dragging = true;
     const f = fractionFromEvent(e);
     updatePosition(f);
@@ -171,13 +172,13 @@ export function createScrubTrack(
   const onPointerUp = (e: PointerEvent): void => {
     if (!dragging) return;
     dragging = false;
-    track.releasePointerCapture(e.pointerId);
+    playhead.releasePointerCapture(e.pointerId);
   };
 
   const updatePosition = (fraction: number): void => {
-    const pct = `${fraction * 100}%`;
-    fill.style.width = pct;
-    knob.style.left = pct;
+    const phW = playhead.offsetWidth || 20;
+    const maxLeft = track.offsetWidth - phW;
+    playhead.style.left = `${Math.max(0, fraction * maxLeft)}px`;
   };
 
   track.addEventListener("pointerdown", onPointerDown);

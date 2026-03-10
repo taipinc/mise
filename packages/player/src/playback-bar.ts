@@ -74,12 +74,22 @@ export class PlaybackBar {
       this.barEl.classList.add(cls);
     }
 
+    const pbBar = composition.stage.playbackBar;
+
+    // Control order: Mute → Play/Pause → Current time → Scrub → Total time
+
+    if (pbBar.globalMute) {
+      this.globalMuteBtn = document.createElement("div");
+      this.globalMuteBtn.classList.add("mise-global-mute-btn");
+      this.globalMuteBtn.textContent = "\u266A";
+      this.globalMuteBtn.addEventListener("click", this.onGlobalMuteClick);
+      this.barEl.appendChild(this.globalMuteBtn);
+    }
+
     this.playPauseBtn = document.createElement("div");
     this.playPauseBtn.classList.add("mise-play-pause-btn");
     this.playPauseBtn.textContent = "\u25B6";
     this.barEl.appendChild(this.playPauseBtn);
-
-    const pbBar = composition.stage.playbackBar;
 
     if (pbBar.showCurrentTime) {
       this.timeCurrentEl = document.createElement("span");
@@ -107,14 +117,6 @@ export class PlaybackBar {
       }
       this.timeTotalEl.textContent = this.duration !== null ? formatTime(this.duration) : "\u221E";
       this.barEl.appendChild(this.timeTotalEl);
-    }
-
-    if (pbBar.globalMute) {
-      this.globalMuteBtn = document.createElement("div");
-      this.globalMuteBtn.classList.add("mise-global-mute-btn");
-      this.globalMuteBtn.textContent = "\u266A";
-      this.globalMuteBtn.addEventListener("click", this.onGlobalMuteClick);
-      this.barEl.appendChild(this.globalMuteBtn);
     }
 
     stageRoot.appendChild(this.barEl);

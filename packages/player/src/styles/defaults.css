@@ -2,8 +2,14 @@
    Mise Player — Default Stylesheet
    Injected first inside the Shadow DOM. Author styles override these.
 
-   Base unit: 20px — used consistently for title bar height, close
-   button, resize handle, mute button, and element playbar height.
+   Design system:
+     Background surfaces:  #1a1a1a
+     Secondary / controls: #2a2a2a
+     Borders:              #444
+     Text:                 #ccc
+     Active / hover:       #666
+     Typography:           system-ui, sans-serif
+     Control height:       20px (matches global Playback Bar)
    ================================================================ */
 
 /* --- Host & Stage --- */
@@ -43,7 +49,7 @@
 
 .mise-type-text,
 .mise-type-component {
-  color: #e0e0e0;
+  color: #ccc;
   font-family: system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.5;
@@ -55,8 +61,8 @@
   overflow: auto;
   padding: 12px;
   box-sizing: border-box;
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #1a1a1a;
+  border: 1px solid #444;
 }
 
 /* --- Image defaults --- */
@@ -91,8 +97,8 @@
 /* --- Audio defaults --- */
 
 .mise-type-audio .mise-body {
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #1a1a1a;
+  border: 1px solid #444;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -101,65 +107,62 @@
 }
 
 .mise-audio-icon {
-  color: rgba(200, 200, 200, 0.6);
+  color: #ccc;
+  font-family: system-ui, sans-serif;
   font-size: 24px;
   line-height: 1;
   user-select: none;
 }
 
-.mise-audio-controls {
+/* --- Shared control buttons ---
+   All interactive buttons share the same base sizing and typography. */
+
+.mise-play-pause-btn,
+.mise-mute-btn,
+.mise-global-mute-btn {
+  height: 20px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  width: 90%;
-}
-
-.mise-audio-controls .mise-play-pause-btn {
-  width: 20px;
-  height: 20px;
+  justify-content: center;
+  cursor: pointer;
+  color: #ccc;
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
   flex-shrink: 0;
-  font-size: 10px;
+  user-select: none;
 }
 
-.mise-audio-controls .mise-mute-btn {
-  position: static;
-  opacity: 1;
+.mise-play-pause-btn:hover,
+.mise-mute-btn:hover,
+.mise-global-mute-btn:hover {
+  color: #fff;
+}
+
+.mise-play-pause-btn {
   width: 20px;
-  height: 20px;
-  flex-shrink: 0;
 }
 
-.mise-audio-controls .mise-scrub-track {
+.mise-mute-btn {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 20px;
+  z-index: 2;
+  background: #2a2a2a;
+}
+
+.mise-global-mute-btn {
+  width: 20px;
+}
+
+/* --- Scrub track (shared by audio controls, element playbar, and global bar) --- */
+
+.mise-scrub-track {
   flex: 1;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
+  height: 100%;
   position: relative;
   cursor: pointer;
   touch-action: none;
-}
-
-/* --- Shared scrub track parts (used by audio controls & element playbar) --- */
-
-.mise-scrub-fill {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  background: rgba(160, 160, 160, 0.5);
-  border-radius: 3px;
-  pointer-events: none;
-}
-
-.mise-scrub-knob {
-  position: absolute;
-  top: 50%;
-  width: 10px;
-  height: 10px;
-  background: #ccc;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
 }
 
 /* --- Element Playbar (per-element transport) --- */
@@ -170,30 +173,13 @@
   left: 20px;
   right: 20px;
   height: 20px;
-  background: rgba(0, 0, 0, 0.6);
+  background: #1a1a1a;
   display: flex;
   align-items: center;
   padding: 0 4px;
   gap: 4px;
   box-sizing: border-box;
   z-index: 2;
-}
-
-.mise-element-playbar .mise-play-pause-btn {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  font-size: 10px;
-}
-
-.mise-element-playbar .mise-scrub-track {
-  flex: 1;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-  position: relative;
-  cursor: pointer;
-  touch-action: none;
 }
 
 /* --- Title bar (drag handle) --- */
@@ -205,7 +191,7 @@
   width: 100%;
   height: 20px;
   z-index: 2;
-  background: rgba(0, 0, 0, 0.35);
+  background: #1a1a1a;
   touch-action: none;
 }
 
@@ -217,14 +203,20 @@
   right: 0;
   width: 20px;
   height: 20px;
-  background: #333;
+  background: #2a2a2a;
   color: #ccc;
+  font-family: system-ui, sans-serif;
   font-size: 11px;
   line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.mise-close-btn:hover {
+  background: #666;
+  color: #fff;
 }
 
 /* --- Resize handle (bottom-right corner) --- */
@@ -235,28 +227,21 @@
   bottom: 0;
   width: 20px;
   height: 20px;
-  background: #555;
+  background: #2a2a2a;
   cursor: nwse-resize;
   touch-action: none;
   z-index: 3;
-}
-
-/* --- Mute button (bottom-left corner) --- */
-
-.mise-mute-btn {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 20px;
-  height: 20px;
-  z-index: 2;
-  background: #333;
-  color: #ccc;
-  font-size: 11px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #ccc;
+  font-family: system-ui, sans-serif;
+  font-size: 11px;
+  user-select: none;
+}
+
+.mise-resize-handle:hover {
+  background: #666;
 }
 
 /* --- Controls hover visibility ---
@@ -285,7 +270,7 @@
   left: 0;
   width: 100%;
   height: 20px;
-  background: rgba(0, 0, 0, 0.8);
+  background: #1a1a1a;
   display: flex;
   align-items: center;
   z-index: 99999;
@@ -297,67 +282,37 @@
   opacity: 1;
 }
 
-.mise-play-pause-btn {
-  width: 40px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #fff;
-  font-size: 12px;
-  flex-shrink: 0;
-  user-select: none;
-}
-
-.mise-scrub-track {
-  flex: 1;
-  height: 100%;
-  position: relative;
-  cursor: pointer;
-}
-
 .mise-playhead {
   position: absolute;
   top: 0;
   left: 0;
   width: 20px;
   height: 20px;
-  background: rgba(160, 160, 160, 0.8);
+  background: #2a2a2a;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: #ccc;
+  font-family: system-ui, sans-serif;
   font-size: 11px;
   cursor: grab;
   user-select: none;
   touch-action: none;
 }
 
-.mise-playhead:active {
-  cursor: grabbing;
+.mise-playhead:hover {
+  background: #666;
 }
 
-/* --- Global mute button (inside playback bar) --- */
-
-.mise-global-mute-btn {
-  width: 40px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #fff;
-  font-size: 12px;
-  flex-shrink: 0;
-  user-select: none;
+.mise-playhead:active {
+  cursor: grabbing;
 }
 
 /* --- Time displays --- */
 
 .mise-time-current,
 .mise-time-total {
-  color: rgba(255, 255, 255, 0.7);
+  color: #ccc;
   font-family: system-ui, sans-serif;
   font-size: 11px;
   line-height: 20px;

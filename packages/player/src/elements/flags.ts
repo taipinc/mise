@@ -220,6 +220,7 @@ function applyResizable(
 ): () => void {
   const handle = document.createElement("div");
   handle.classList.add("mise-resize-handle");
+  handle.textContent = "\u2921";
   wrapper.appendChild(handle);
 
   handle.addEventListener("pointerenter", showControls);
