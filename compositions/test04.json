@@ -233,7 +233,7 @@
       "audio": {
         "initial": "off",
         "audienceControl": true,
-        "fadeIn": 0,
+        "fadeIn": 8000,
         "fadeOut": 0
       },
       "position": { "x": 1100, "y": 550 },
@@ -267,7 +267,7 @@
         "bar": { "visible": true, "classNames": [] }
       },
       "audio": {
-        "initial": "off",
+        "initial": "on",
         "audienceControl": true,
         "fadeIn": 0,
         "fadeOut": 0
@@ -305,7 +305,7 @@
       "audio": {
         "initial": "off",
         "audienceControl": true,
-        "fadeIn": 0,
+        "fadeIn": 8000,
         "fadeOut": 0
       },
       "position": { "x": 680, "y": 300 },

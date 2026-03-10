@@ -43,6 +43,8 @@ interface YTPlayerInstance {
   seekTo(seconds: number, allowSeekAhead: boolean): void;
   mute(): void;
   unMute(): void;
+  setVolume(volume: number): void;
+  getVolume(): number;
   getCurrentTime(): number;
   getDuration(): number;
   getIframe(): HTMLIFrameElement;
@@ -114,6 +116,8 @@ function applyCoverSize(el: HTMLElement, containerW: number, containerH: number)
 
 // --- VideoElement ---
 
+const FADE_STEP_MS = 50;
+
 export class VideoElement implements ElementRenderer {
   private readonly element: MiseElement;
   private readonly stageRoot: HTMLDivElement;
@@ -128,6 +132,7 @@ export class VideoElement implements ElementRenderer {
   private muteButton: MuteButton | null = null;
   private elementPlaybar: ElementPlaybar | null = null;
   private playbarPollTimer: ReturnType<typeof setInterval> | null = null;
+  private fadeTimer: ReturnType<typeof setInterval> | null = null;
   readonly syncWithClock: boolean;
 
   constructor(element: MiseElement, stageRoot: HTMLDivElement, onClose?: () => void) {
@@ -250,8 +255,16 @@ export class VideoElement implements ElementRenderer {
       }, { once: true });
     }
 
+    const fadeInMs = el.audio?.fadeIn ?? 0;
+    if (fadeInMs > 0 && !wantsMuted) {
+      video.volume = 0;
+    }
+
     if (wantsAutoplay) {
       video.play().catch(() => {});
+      this.startFadeIn();
+    } else if (fadeInMs > 0 && !wantsMuted) {
+      this.startFadeIn();
     }
 
     this.startPlaybarPolling();
@@ -302,7 +315,14 @@ export class VideoElement implements ElementRenderer {
 
     player.ready().then(async () => {
       if (wantsAutoplay) player.play().catch(() => {});
-      if (!wantsMuted) player.setVolume(1).catch(() => {});
+
+      const fadeInMs = el.audio?.fadeIn ?? 0;
+      if (!wantsMuted && fadeInMs > 0) {
+        player.setVolume(0).catch(() => {});
+        this.startFadeIn();
+      } else if (!wantsMuted) {
+        player.setVolume(1).catch(() => {});
+      }
 
       if (el.mediaFit === "fit" && wrapper) {
         try {
@@ -422,7 +442,12 @@ export class VideoElement implements ElementRenderer {
             }
 
             if (!wantsMuted) {
+              const fadeInMs = el.audio?.fadeIn ?? 0;
               event.target.unMute();
+              if (fadeInMs > 0) {
+                event.target.setVolume(0);
+                this.startFadeIn();
+              }
             }
 
             this.startPlaybarPolling();
@@ -509,6 +534,7 @@ export class VideoElement implements ElementRenderer {
   }
 
   unmount(): void {
+    this.cancelFade();
     if (this.playbarPollTimer !== null) {
       clearInterval(this.playbarPollTimer);
       this.playbarPollTimer = null;
@@ -530,35 +556,33 @@ export class VideoElement implements ElementRenderer {
       this.flagsCleanup = null;
     }
 
-    const vp = this.vimeoPlayer;
-    this.vimeoPlayer = null;
-    const ytp = this.ytPlayer;
-    this.ytPlayer = null;
-    const nv = this.nativeVideo;
-    this.nativeVideo = null;
+    const fadeOutMs = this.element.audio?.fadeOut ?? 0;
+    const wantsMuted = this.element.audio?.initial === "off";
 
-    if (this.wrapper) {
-      applyAnimation(this.wrapper, this.element.animation.exit, () => {
-        if (vp) vp.destroy().catch(() => {});
-        if (ytp) {
-          try { ytp.destroy(); } catch { /* ignore */ }
-        }
-        if (nv) {
-          nv.pause();
-          nv.src = "";
-        }
-        this.wrapper?.remove();
-        this.wrapper = null;
+    const destroyPlayers = (): void => {
+      if (this.vimeoPlayer) { this.vimeoPlayer.destroy().catch(() => {}); this.vimeoPlayer = null; }
+      if (this.ytPlayer) { try { this.ytPlayer.destroy(); } catch { /* ignore */ } this.ytPlayer = null; }
+      if (this.nativeVideo) { this.nativeVideo.pause(); this.nativeVideo.src = ""; this.nativeVideo = null; }
+    };
+
+    const runExitAndDestroy = (): void => {
+      if (this.wrapper) {
+        applyAnimation(this.wrapper, this.element.animation.exit, () => {
+          destroyPlayers();
+          this.wrapper?.remove();
+          this.wrapper = null;
+        });
+      } else {
+        destroyPlayers();
+      }
+    };
+
+    if (fadeOutMs > 0 && !wantsMuted && (this.vimeoPlayer || this.ytPlayer || this.nativeVideo)) {
+      this.startFadeOut(() => {
+        runExitAndDestroy();
       });
     } else {
-      if (vp) vp.destroy().catch(() => {});
-      if (ytp) {
-        try { ytp.destroy(); } catch { /* ignore */ }
-      }
-      if (nv) {
-        nv.pause();
-        nv.src = "";
-      }
+      runExitAndDestroy();
     }
   }
 
@@ -596,5 +620,92 @@ export class VideoElement implements ElementRenderer {
       this.nativeVideo.play().catch(() => {});
     }
     this.elementPlaybar?.setPlaying(true);
+  }
+
+  // --- Volume fade helpers ---
+
+  private cancelFade(): void {
+    if (this.fadeTimer !== null) {
+      clearInterval(this.fadeTimer);
+      this.fadeTimer = null;
+    }
+  }
+
+  private setVolume(vol: number): void {
+    if (this.vimeoPlayer) {
+      this.vimeoPlayer.setVolume(vol).catch(() => {});
+    } else if (this.ytPlayer) {
+      this.ytPlayer.setVolume(vol * 100);
+    } else if (this.nativeVideo) {
+      this.nativeVideo.volume = vol;
+    }
+  }
+
+  private startFadeIn(): void {
+    const fadeInMs = this.element.audio?.fadeIn ?? 0;
+    if (fadeInMs <= 0) return;
+
+    this.cancelFade();
+
+    const steps = Math.max(1, Math.floor(fadeInMs / FADE_STEP_MS));
+    const stepDuration = fadeInMs / steps;
+    const volumeStep = 1 / steps;
+    let currentStep = 0;
+
+    this.fadeTimer = setInterval(() => {
+      currentStep++;
+      if (currentStep >= steps) {
+        this.setVolume(1);
+        this.cancelFade();
+        return;
+      }
+      this.setVolume(Math.min(1, volumeStep * currentStep));
+    }, stepDuration);
+  }
+
+  private startFadeOut(onComplete: () => void): void {
+    this.cancelFade();
+
+    const fadeOutMs = this.element.audio?.fadeOut ?? 0;
+    if (fadeOutMs <= 0) {
+      onComplete();
+      return;
+    }
+
+    const startVolume = this.nativeVideo
+      ? this.nativeVideo.volume
+      : this.ytPlayer
+        ? this.ytPlayer.getVolume() / 100
+        : 1;
+    if (startVolume <= 0) {
+      onComplete();
+      return;
+    }
+
+    const steps = Math.max(1, Math.floor(fadeOutMs / FADE_STEP_MS));
+    const stepDuration = fadeOutMs / steps;
+    const volumeStep = startVolume / steps;
+    let currentStep = 0;
+    let done = false;
+
+    const finish = (): void => {
+      if (done) return;
+      done = true;
+      this.cancelFade();
+      this.setVolume(0);
+      onComplete();
+    };
+
+    this.fadeTimer = setInterval(() => {
+      currentStep++;
+      if (currentStep >= steps) {
+        finish();
+        return;
+      }
+      this.setVolume(Math.max(0, startVolume - volumeStep * currentStep));
+    }, stepDuration);
+
+    // Safety timeout — same pattern as animation.exit
+    setTimeout(finish, fadeOutMs + 100);
   }
 }
