@@ -30,6 +30,22 @@ export const PlaybackBarSchema = z
   })
   .passthrough();
 
+export const IntroDisplaySchema = z.object({
+  title: z.boolean().optional().default(true),
+  author: z.boolean().optional().default(true),
+  description: z.boolean().optional().default(false),
+});
+
+export const IntroSchema = z.object({
+  enabled: z.boolean().optional().default(true),
+  display: IntroDisplaySchema.optional().default({
+    title: true,
+    author: true,
+    description: false,
+  }),
+  classNames: z.array(z.string()).optional().default([]),
+});
+
 export const StageSchema = z
   .object({
     viewBox: ViewBoxSchema,
@@ -39,6 +55,11 @@ export const StageSchema = z
     styles: z.string(),
     playback: StagePlaybackSchema,
     playbackBar: PlaybackBarSchema,
+    intro: IntroSchema.optional().default({
+      enabled: true,
+      display: { title: true, author: true, description: false },
+      classNames: [],
+    }),
   })
   .passthrough();
 
@@ -161,6 +182,8 @@ export type ViewBox = z.infer<typeof ViewBoxSchema>;
 export type Sync = z.infer<typeof SyncSchema>;
 export type StagePlayback = z.infer<typeof StagePlaybackSchema>;
 export type PlaybackBar = z.infer<typeof PlaybackBarSchema>;
+export type IntroDisplay = z.infer<typeof IntroDisplaySchema>;
+export type Intro = z.infer<typeof IntroSchema>;
 export type MiseStage = z.infer<typeof StageSchema>;
 export type MiseMeta = z.infer<typeof MetaSchema>;
 export type ElementOpen = z.infer<typeof ElementOpenSchema>;

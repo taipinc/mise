@@ -3,6 +3,8 @@ export type {
   Sync,
   StagePlayback,
   PlaybackBar,
+  IntroDisplay,
+  Intro,
   MiseStage,
   MiseMeta,
   ElementOpen,

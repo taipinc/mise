@@ -310,6 +310,89 @@
 
 /* --- Time displays --- */
 
+/* --- Intro Screen Overlay --- */
+
+.mise-intro-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  cursor: default;
+}
+
+.mise-intro-exiting {
+  animation: mise-intro-fade-out 0.4s ease forwards;
+}
+
+@keyframes mise-intro-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+.mise-intro-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: 0 24px;
+}
+
+.mise-intro-title {
+  color: #fff;
+  font-family: system-ui, sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.mise-intro-author {
+  color: #999;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  margin: 0;
+}
+
+.mise-intro-description {
+  color: #888;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  margin: 0;
+  max-width: 480px;
+  line-height: 1.5;
+}
+
+.mise-intro-play {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #ccc;
+  transition: color 0.2s ease, transform 0.2s ease;
+  outline: none;
+  line-height: 0;
+}
+
+.mise-intro-play:hover {
+  color: #fff;
+  transform: scale(1.08);
+}
+
+.mise-intro-play:active {
+  transform: scale(0.96);
+}
+
+/* --- Time displays --- */
+
 .mise-time-current,
 .mise-time-total {
   color: #ccc;

@@ -8,6 +8,11 @@ import { ImageElement } from "./elements/image";
 import { TextElement } from "./elements/text";
 import { ComponentElement } from "./elements/component";
 import { PlaybackBar } from "./playback-bar";
+import { IntroScreen } from "./intro-screen";
+
+export interface MisePlayerOptions {
+  skipIntro?: boolean;
+}
 
 export class MisePlayer {
   private readonly stage: Stage;
@@ -16,10 +21,17 @@ export class MisePlayer {
   private readonly mountedElements: Map<string, ElementRenderer> = new Map();
   private readonly userClosedElements: Set<string> = new Set();
   private readonly playbackBar: PlaybackBar | null = null;
+  private introScreen: IntroScreen | null = null;
   private globalMuted: boolean = false;
+  private readonly skipIntro: boolean;
 
-  constructor(host: HTMLElement, composition: MiseComposition) {
+  constructor(
+    host: HTMLElement,
+    composition: MiseComposition,
+    options?: MisePlayerOptions
+  ) {
     this.composition = composition;
+    this.skipIntro = options?.skipIntro ?? false;
     this.stage = new Stage(composition, host);
     this.clock = new Clock(composition);
 
@@ -42,6 +54,15 @@ export class MisePlayer {
         (muted) => this.setGlobalMuted(muted)
       );
     }
+
+    const introEnabled = composition.stage.intro?.enabled ?? true;
+    if (introEnabled && !this.skipIntro) {
+      this.introScreen = new IntroScreen(
+        this.stage.root,
+        composition,
+        () => this.play()
+      );
+    }
   }
 
   get currentTime(): number {
@@ -53,6 +74,10 @@ export class MisePlayer {
   }
 
   play(): void {
+    if (this.introScreen) {
+      this.introScreen.dismiss();
+      this.introScreen = null;
+    }
     this.clock.play();
     this.playbackBar?.syncPlayState(true);
     this.resumeSyncedElements();
@@ -105,6 +130,7 @@ export class MisePlayer {
       renderer.unmount();
     }
     this.mountedElements.clear();
+    this.introScreen?.destroy();
     this.playbackBar?.destroy();
     this.clock.destroy();
     this.stage.destroy();
