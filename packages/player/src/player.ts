@@ -9,6 +9,7 @@ import { TextElement } from "./elements/text";
 import { ComponentElement } from "./elements/component";
 import { PlaybackBar } from "./playback-bar";
 import { IntroScreen } from "./intro-screen";
+import { PostMessageBridge } from "./post-message-bridge";
 
 export interface MisePlayerOptions {
   skipIntro?: boolean;
@@ -24,6 +25,7 @@ export class MisePlayer {
   private introScreen: IntroScreen | null = null;
   private globalMuted: boolean = false;
   private readonly skipIntro: boolean;
+  private readonly postMessageBridge: PostMessageBridge;
 
   constructor(
     host: HTMLElement,
@@ -55,6 +57,8 @@ export class MisePlayer {
       );
     }
 
+    this.postMessageBridge = new PostMessageBridge(this);
+
     const introEnabled = composition.stage.intro?.enabled ?? true;
     if (introEnabled && !this.skipIntro) {
       this.introScreen = new IntroScreen(
@@ -80,12 +84,14 @@ export class MisePlayer {
     }
     this.clock.play();
     this.playbackBar?.syncPlayState(true);
+    this.postMessageBridge.notifyStateChange("playing");
     this.resumeSyncedElements();
   }
 
   pause(): void {
     this.clock.pause();
     this.playbackBar?.syncPlayState(false);
+    this.postMessageBridge.notifyStateChange("paused");
     this.pauseSyncedElements();
   }
 
@@ -132,6 +138,7 @@ export class MisePlayer {
     this.mountedElements.clear();
     this.introScreen?.destroy();
     this.playbackBar?.destroy();
+    this.postMessageBridge.destroy();
     this.clock.destroy();
     this.stage.destroy();
   }
