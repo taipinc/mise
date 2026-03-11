@@ -24,6 +24,8 @@ async function init(): Promise<void> {
 
   const player = new MisePlayer(host, composition);
 
+  const introEnabled = composition.stage.intro?.enabled ?? true;
+
   let lastLoggedSecond = -1;
   player.getClock().on("tick", (e) => {
     if (e.type !== "tick") return;
@@ -46,8 +48,12 @@ async function init(): Promise<void> {
     }
   });
 
-  player.play();
-  console.log("[mise] Player started. Clock running.");
+  if (!introEnabled) {
+    player.play();
+    console.log("[mise] Player started. Clock running.");
+  } else {
+    console.log("[mise] Intro screen shown. Waiting for user interaction.");
+  }
 }
 
 init();
