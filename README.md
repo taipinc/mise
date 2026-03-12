@@ -26,7 +26,7 @@ Mise is a pnpm monorepo with three packages:
 |---|---|
 | `@mise/core` | TypeScript types, Zod validation schemas, and the Clock engine |
 | `@mise/player` | The runtime that reads a project JSON and renders it in a browser |
-| `@mise/editor` | The authoring tool *(planned — Phase 3)* |
+| `@mise/editor` | The visual authoring tool for creating and editing compositions |
 
 ---
 
@@ -45,14 +45,57 @@ cd mise
 pnpm install
 ```
 
-### Run the player
+### Run the player (standalone)
 
 ```bash
 cd packages/player
 pnpm dev
 ```
 
-Open `http://localhost:5173` in your browser. The player loads `compositions/test02.json` by default.
+Open `http://localhost:5173` in your browser. The player loads `compositions/test04.json` by default.
+
+### Run the editor
+
+The editor embeds the player in an iframe, so **both dev servers must be running**.
+
+**Terminal 1** — start the player:
+```bash
+cd packages/player
+pnpm dev
+```
+
+**Terminal 2** — start the editor:
+```bash
+cd packages/editor
+pnpm dev
+```
+
+Open `http://localhost:5180` in a Chromium-based browser (Chrome, Edge, Arc, Brave — required for file open/save).
+
+---
+
+## The Editor
+
+The editor is a four-panel authoring environment built with React, Zustand, and Tailwind CSS.
+
+```
+┌──────────────────────────────────────────────────┐
+│ Toolbar (Open, Save, Play/Pause, filename)       │
+├────────┬─────────────────────────┬───────────────┤
+│ Stage  │                         │   Inspector   │
+│ View   │   Stage Preview         │               │
+│        │   (live player)         │               │
+│        │                         │               │
+├────────┴─────────────────────────┴───────────────┤
+│ Timeline                                         │
+└──────────────────────────────────────────────────┘
+```
+
+- **Toolbar** — Open/save composition JSON files via the File System Access API. Play/pause transport controls.
+- **Stage View** (left) — Element list grouped by past/present/future based on the current clock time. Add new elements with the "+" button, delete with the trash icon on hover. Click to select.
+- **Stage Preview** (center) — Live player preview that updates in real time as you edit. Aspect-ratio fitted to the composition's viewBox.
+- **Inspector** (right) — When no element is selected: edit stage settings (viewBox, playback, playback bar) and author CSS styles in a CodeMirror editor. When an element is selected: edit cues, position, size, flags, source URL, HTML content, playback, and audio settings.
+- **Timeline** (bottom) — Interactive timeline with a draggable playhead, zoom (Ctrl+scroll or buttons), color-coded element blocks, and auto-scroll during playback. Click a block to select the element.
 
 ---
 
@@ -101,7 +144,7 @@ See [`SCHEMA.md`](./packages/core/SCHEMA.md) for the full schema reference.
 
 ## Status
 
-Mise is in early development. Phase 1 (core schema, Clock engine, and player runtime) is complete. See the [project context document](./CONTEXT.md) for the full roadmap.
+Phase 1 (core schema, Clock engine, and player runtime) is complete. Phase 2 (editor) is in progress — the authoring tool is functional with live preview, property editing, element management, and file I/O. See the [project context document](./CONTEXT.md) for the full roadmap.
 
 ---
 
