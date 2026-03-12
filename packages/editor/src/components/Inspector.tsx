@@ -4,6 +4,7 @@ import type { MiseElement, MiseStage, MiseMeta } from "@mise/core";
 import { useEditorStore } from "../store";
 import type { DeepPartial } from "../store";
 import { cn } from "../lib/cn";
+import { CssEditor } from "./CssEditor";
 
 // ============================================================
 // Primitives
@@ -272,12 +273,15 @@ function StageInspector({
         </Row>
       </Section>
 
+      <Section title="Stage Styles">
+        <CssEditor
+          value={stage.styles}
+          onChange={(v) => updateStage({ styles: v })}
+        />
+      </Section>
+
       <Section title="Summary" defaultOpen={false}>
         <ReadonlyRow label="Elements" value={elementCount} />
-        <ReadonlyRow
-          label="Styles"
-          value={stage.styles ? `${stage.styles.length} chars` : "—"}
-        />
       </Section>
     </>
   );

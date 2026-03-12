@@ -16,6 +16,8 @@ interface EditorState {
   setSelectedElementId: (id: string | null) => void;
   updateElement: (id: string, patch: DeepPartial<MiseElement>) => void;
   updateStage: (patch: DeepPartial<MiseStage>) => void;
+  addElement: (element: MiseElement) => void;
+  removeElement: (id: string) => void;
 }
 
 // Recursive partial that works for objects but leaves primitives alone
@@ -89,6 +91,25 @@ export const useEditorStore = create<EditorState>((set) => ({
         ...state.composition,
         stage: deepMerge(state.composition.stage, patch) as MiseStage,
       },
+    })),
+
+  addElement: (element) =>
+    set((state) => ({
+      composition: {
+        ...state.composition,
+        elements: [...state.composition.elements, element],
+      },
+      selectedElementId: element.id,
+    })),
+
+  removeElement: (id) =>
+    set((state) => ({
+      composition: {
+        ...state.composition,
+        elements: state.composition.elements.filter((el) => el.id !== id),
+      },
+      selectedElementId:
+        state.selectedElementId === id ? null : state.selectedElementId,
     })),
 }));
 
