@@ -53,10 +53,11 @@ mise/
 │           │   └── player-bridge.ts # Typed postMessage wrappers (sendCommand, listenToPlayer)
 │           └── components/
 │               ├── Toolbar.tsx      # Open/Save file + Play/Pause transport
-│               ├── StageView.tsx    # Left panel — element list
+│               ├── StageView.tsx    # Left panel — element list with add/delete
 │               ├── StagePreview.tsx # Center — player iframe + postMessage wiring
-│               ├── Inspector.tsx    # Right panel — composition metadata
-│               └── Timeline.tsx     # Bottom panel — element tracks + playhead
+│               ├── Inspector.tsx    # Right panel — stage/element property editing
+│               ├── CssEditor.tsx    # CodeMirror 6 CSS editor (used in Inspector)
+│               └── Timeline.tsx     # Bottom panel — interactive element tracks + playhead
 ├── compositions/    # Hand-written test JSON files
 │   ├── schema.json  # Reference schema document (not a real composition)
 │   ├── test01.json  # Two Vimeo videos
@@ -103,13 +104,16 @@ Phase 1 (Core & Player) is substantially complete. Phase 2 (Editor) has begun.
 - `elements/animation.ts` — `applyAnimation()`: enter class (removed after 500ms), exit class (waits for `animationend` or 600ms timeout before DOM removal).
 - `elements/renderer.ts` — `ElementRenderer` interface: `mount()`, `unmount()`, `seek()`, `pause()`, `resume()`, `setGlobalMuted()`, `syncWithClock` property.
 
-### `@mise/editor` — early stage (scaffolded, functional)
+### `@mise/editor` — functional authoring tool
 
-- **Stack**: React 19, Vite, TypeScript, Tailwind CSS v4, Zustand 5, react-resizable-panels, lucide-react.
+- **Stack**: React 19, Vite, TypeScript, Tailwind CSS v4, Zustand 5, react-resizable-panels, lucide-react, CodeMirror 6.
 - **Layout**: Four-zone resizable panel architecture (see "Editor Architecture" below).
-- **State**: Zustand store with composition JSON as single source of truth.
-- **Player integration**: Embeds `@mise/player` in an iframe, communicates via postMessage.
+- **State**: Zustand store with composition JSON as single source of truth. Actions: `setComposition`, `updateElement` (deep merge), `updateStage` (deep merge), `addElement`, `removeElement`, `setSelectedElementId`, `setCurrentTime`, `setPlaying`.
+- **Player integration**: Embeds `@mise/player` in an iframe, communicates via postMessage. Debounced reload (300ms) on composition changes with playback state restoration (seek + play after load).
 - **File I/O**: Open/Save via File System Access API (`showOpenFilePicker`/`showSaveFilePicker`).
+- **Stage View** (left panel): Elements grouped by past/present/future zones based on current clock time. Click to select. "+" button with type picker popover to add new elements (sensible defaults: centered, open at current time). Trash button on hover to delete elements.
+- **Inspector** (right panel): Two modes — Stage Inspector (no selection) and Element Inspector (element selected). Stage Inspector: editable viewBox, playback settings, playback bar toggles, CodeMirror 6 CSS editor for `stage.styles`. Element Inspector: editable cues, position/size, flags, playback, audio, src (text input for video/audio/image), content (textarea for text/component).
+- **Timeline** (bottom panel): Interactive timeline with draggable playhead, zoom (Ctrl+scroll, buttons), type-colored element blocks, click-to-select, sticky labels, time ruler, auto-scroll during playback.
 - Loads `compositions/test04.json` as the default composition on startup.
 
 ### What's still TODO
@@ -119,9 +123,8 @@ Phase 1 (Core & Player) is substantially complete. Phase 2 (Editor) has begun.
 - Author CSS customization of the Playback Bar via `classNames`
 
 **Editor next steps:**
-- Drag-and-drop timeline editing
-- Element property editing in the Inspector
-- Stage view with visual element positioning
+- Drag-and-drop timeline editing (resize/move element cues on timeline)
+- Visual element positioning on the stage preview (drag to move/resize)
 - Undo/redo
 
 ---
@@ -184,10 +187,10 @@ Sent to `window.parent` only when the player is inside an iframe (`window.parent
 
 - **Splits**: `react-resizable-panels`. Vertical split: top (70%) / bottom (30%). Top has horizontal split: left (20%) / center (55%) / right (25%).
 - **Toolbar**: Not a panel — fixed `h-10` bar at top. Contains Open/Save (File System Access API) and Play/Pause (sends postMessage to player iframe).
-- **Stage View** (left): Lists elements by type badge + ID. Placeholder for future visual stage manipulation.
-- **Stage Preview** (center): `<iframe src="http://localhost:5173">`. On load and on composition change, sends `mise:command` `load` with the current Zustand composition. Listens for `mise:tick` → `setCurrentTime`, `mise:stateChange` → `setPlaying`.
-- **Inspector** (right): Displays composition metadata (title, viewBox, duration, element count). Placeholder for future per-element property editing.
-- **Timeline** (bottom): One row per element. Each row has a label column (7rem) and a track area showing the element's open/close range as a percentage bar. Red playhead line tracks `currentTime`.
+- **Stage View** (left): Elements grouped into past/present/future zones based on current clock time, each with type icon + id. Click to select. Header has "+" button that opens a type picker popover to add new elements. Each row has a delete button visible on hover.
+- **Stage Preview** (center): `<iframe src="http://localhost:5173">`. Aspect-ratio fitted via ResizeObserver. On load and on composition change (debounced 300ms), sends `mise:command` `load` with the current Zustand composition, then restores playback state (seek + play). Listens for `mise:tick` → `setCurrentTime`, `mise:stateChange` → `setPlaying`.
+- **Inspector** (right): Two modes. **Stage Inspector** (no selection): editable viewBox dimensions, playback settings (duration, loop, sync), playback bar toggles, and a CodeMirror 6 CSS editor for `stage.styles` (debounced 400ms). **Element Inspector** (element selected): editable identity (visible, background), source (text input for src), content (textarea), cues (open/close mode + time), position/size, flags, animation, playback, and audio settings. All editable fields use commit-on-blur pattern.
+- **Timeline** (bottom): Interactive timeline with draggable playhead, zoom (Ctrl+scroll + buttons), type-colored element blocks, click-to-select, sticky labels, time ruler with dynamic tick spacing, auto-scroll during playback.
 
 ### Zustand Store (`store.ts`)
 
@@ -197,12 +200,22 @@ interface EditorState {
   currentTime: number;            // From player tick messages
   playing: boolean;               // From player stateChange messages
   fileName: string | null;        // Name of loaded file
+  selectedElementId: string | null;
 
   setComposition: (composition: MiseComposition, fileName?: string) => void;
   setCurrentTime: (time: number) => void;
   setPlaying: (playing: boolean) => void;
+  setSelectedElementId: (id: string | null) => void;
+  updateElement: (id: string, patch: DeepPartial<MiseElement>) => void;
+  updateStage: (patch: DeepPartial<MiseStage>) => void;
+  addElement: (element: MiseElement) => void;
+  removeElement: (id: string) => void;
 }
 ```
+
+`updateElement` and `updateStage` use a `deepMerge` utility that recursively merges partial patches into the existing state, so callers only need to specify changed fields (e.g. `updateStage({ viewBox: { width: 1280 } })`).
+
+`addElement` auto-selects the new element. `removeElement` clears selection if the removed element was selected.
 
 Initial state loads `compositions/test04.json` via static import, validated through `CompositionSchema.safeParse()`.
 
