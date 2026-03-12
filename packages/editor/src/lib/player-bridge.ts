@@ -30,8 +30,12 @@ export function sendCommand(
   if (command === "seek") {
     win.postMessage({ type: "mise:command", command: "seek", time: payload }, "*");
   } else if (command === "load") {
+    // Round-trip through JSON so the player receives clean data that
+    // will pass Zod re-validation (structured clone can preserve
+    // non-JSON artifacts from Zod 4 output / deepMerge).
+    const clean: unknown = JSON.parse(JSON.stringify(payload));
     win.postMessage(
-      { type: "mise:command", command: "load", composition: payload },
+      { type: "mise:command", command: "load", composition: clean },
       "*"
     );
   } else {

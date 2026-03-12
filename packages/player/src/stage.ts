@@ -16,7 +16,14 @@ export class Stage {
     this.viewBoxHeight = viewBox.height;
     this.scalingEnabled = scaling;
 
-    this.shadow = host.attachShadow({ mode: "open" });
+    // Reuse existing shadow root if the host already has one (e.g. editor reload)
+    const existing = host.shadowRoot;
+    if (existing) {
+      existing.innerHTML = "";
+      this.shadow = existing;
+    } else {
+      this.shadow = host.attachShadow({ mode: "open" });
+    }
 
     // 1. Inject baseline defaults (always first — author styles override)
     const defaultsStyle = document.createElement("style");
