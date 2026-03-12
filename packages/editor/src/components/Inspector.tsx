@@ -177,6 +177,74 @@ function SelectInput<T extends string>({
   );
 }
 
+function TextInput({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}): React.JSX.Element {
+  const [draft, setDraft] = useState(value);
+  const ref = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setDraft(value);
+  }, [value]);
+
+  const commit = (): void => {
+    if (draft !== value) onChange(draft);
+  };
+
+  return (
+    <input
+      ref={ref}
+      type="text"
+      className={INPUT_CLASS}
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          commit();
+          ref.current?.blur();
+        }
+      }}
+    />
+  );
+}
+
+function TextAreaInput({
+  value,
+  onChange,
+  rows = 6,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  rows?: number;
+}): React.JSX.Element {
+  const [draft, setDraft] = useState(value);
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    setDraft(value);
+  }, [value]);
+
+  const commit = (): void => {
+    if (draft !== value) onChange(draft);
+  };
+
+  return (
+    <textarea
+      ref={ref}
+      className={cn(INPUT_CLASS, "resize-y")}
+      rows={rows}
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+    />
+  );
+}
+
 // ============================================================
 // Stage Inspector (no selection) — with editable playback fields
 // ============================================================
@@ -310,15 +378,15 @@ function ElementInspector({ el }: { el: MiseElement }): React.JSX.Element {
 
       {el.src !== null && (
         <Section title="Source">
-          <ReadonlyRow label="src" value={<Mono>{truncate(el.src, 60)}</Mono>} />
+          <Row label="src">
+            <TextInput value={el.src} onChange={(v) => patch({ src: v })} />
+          </Row>
         </Section>
       )}
 
       {el.content !== null && (
-        <Section title="Content" defaultOpen={false}>
-          <div className="max-h-24 overflow-y-auto rounded bg-muted p-1.5 font-mono text-[10px] text-muted-foreground">
-            {truncate(el.content, 300)}
-          </div>
+        <Section title="Content">
+          <TextAreaInput value={el.content} onChange={(v) => patch({ content: v })} rows={6} />
         </Section>
       )}
 
