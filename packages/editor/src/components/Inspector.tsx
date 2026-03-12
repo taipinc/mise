@@ -1,18 +1,25 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { ChevronDown, ChevronRight, X } from "lucide-react";
 import type { MiseElement, MiseStage, MiseMeta } from "@mise/core";
 import { useEditorStore } from "../store";
+import type { DeepPartial } from "../store";
 import { cn } from "../lib/cn";
 
-// --- Primitives ---
+// ============================================================
+// Primitives
+// ============================================================
 
-function Row({ label, value }: { label: string; value: React.ReactNode }): React.JSX.Element {
+function Row({ label, children }: { label: string; children: React.ReactNode }): React.JSX.Element {
   return (
-    <div className="flex gap-2 py-0.5">
+    <div className="flex items-baseline gap-2 py-0.5">
       <span className="w-24 shrink-0 text-muted-foreground">{label}</span>
-      <span className="min-w-0 break-all text-surface-foreground">{value}</span>
+      <span className="min-w-0 flex-1 text-surface-foreground">{children}</span>
     </div>
   );
+}
+
+function ReadonlyRow({ label, value }: { label: string; value: React.ReactNode }): React.JSX.Element {
+  return <Row label={label}>{value}</Row>;
 }
 
 function Section({
@@ -48,17 +55,130 @@ function Bool({ value }: { value: boolean }): React.JSX.Element {
   );
 }
 
+function Mono({ children }: { children: React.ReactNode }): React.JSX.Element {
+  return <span className="font-mono text-[11px]">{children}</span>;
+}
+
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-function Mono({ children }: { children: React.ReactNode }): React.JSX.Element {
-  return <span className="font-mono text-[11px]">{children}</span>;
+function truncate(s: string, max: number): string {
+  return s.length > max ? s.slice(0, max) + "..." : s;
 }
 
-// --- Stage Inspector (no selection) ---
+// ============================================================
+// Editable input primitives (commit-on-blur / Enter)
+// ============================================================
+
+const INPUT_CLASS =
+  "w-full rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-surface-foreground outline-none focus:ring-1 focus:ring-primary/50";
+
+function NumberInput({
+  value,
+  onChange,
+  nullable = false,
+  min,
+  step,
+}: {
+  value: number | null;
+  onChange: (v: number | null) => void;
+  nullable?: boolean;
+  min?: number;
+  step?: number;
+}): React.JSX.Element {
+  const [draft, setDraft] = useState(value === null ? "" : String(value));
+  const ref = useRef<HTMLInputElement>(null);
+
+  // Sync when external value changes (e.g. different element selected)
+  useEffect(() => {
+    setDraft(value === null ? "" : String(value));
+  }, [value]);
+
+  const commit = (): void => {
+    if (nullable && draft.trim() === "") {
+      onChange(null);
+      return;
+    }
+    const n = Number(draft);
+    if (Number.isFinite(n) && (min === undefined || n >= min)) {
+      onChange(n);
+    } else {
+      setDraft(value === null ? "" : String(value));
+    }
+  };
+
+  return (
+    <input
+      ref={ref}
+      type="text"
+      inputMode="decimal"
+      className={INPUT_CLASS}
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          commit();
+          ref.current?.blur();
+        }
+      }}
+      step={step}
+    />
+  );
+}
+
+function ToggleInput({
+  value,
+  onChange,
+}: {
+  value: boolean;
+  onChange: (v: boolean) => void;
+}): React.JSX.Element {
+  return (
+    <button
+      onClick={() => onChange(!value)}
+      className={cn(
+        "rounded px-2 py-0.5 text-[11px] font-mono transition-colors",
+        value
+          ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+          : "bg-muted text-muted-foreground hover:bg-muted/80"
+      )}
+    >
+      {value ? "yes" : "no"}
+    </button>
+  );
+}
+
+function SelectInput<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: readonly T[];
+  onChange: (v: T) => void;
+}): React.JSX.Element {
+  return (
+    <select
+      className={cn(INPUT_CLASS, "cursor-pointer")}
+      value={value}
+      onChange={(e) => onChange(e.target.value as T)}
+    >
+      {options.map((opt) => (
+        <option key={opt} value={opt}>
+          {opt}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+// ============================================================
+// Stage Inspector (no selection) — with editable playback fields
+// ============================================================
 
 function StageInspector({
   meta,
@@ -69,50 +189,92 @@ function StageInspector({
   stage: MiseStage;
   elementCount: number;
 }): React.JSX.Element {
+  const updateStage = useEditorStore((s) => s.updateStage);
+
   return (
     <>
       <Section title="Meta">
-        <Row label="Title" value={meta.title || "(untitled)"} />
-        <Row label="Author" value={meta.author || "—"} />
-        <Row label="Created" value={meta.created} />
-        <Row label="Modified" value={meta.modified} />
+        <ReadonlyRow label="Title" value={meta.title || "(untitled)"} />
+        <ReadonlyRow label="Author" value={meta.author || "—"} />
+        <ReadonlyRow label="Created" value={meta.created} />
+        <ReadonlyRow label="Modified" value={meta.modified} />
       </Section>
 
       <Section title="ViewBox">
-        <Row
-          label="Size"
-          value={<Mono>{stage.viewBox.width} &times; {stage.viewBox.height}</Mono>}
-        />
-        <Row label="Scaling" value={<Bool value={stage.scaling} />} />
-        <Row
+        <Row label="Width">
+          <NumberInput
+            value={stage.viewBox.width}
+            onChange={(v) => v !== null && updateStage({ viewBox: { width: v } })}
+            min={1}
+          />
+        </Row>
+        <Row label="Height">
+          <NumberInput
+            value={stage.viewBox.height}
+            onChange={(v) => v !== null && updateStage({ viewBox: { height: v } })}
+            min={1}
+          />
+        </Row>
+        <ReadonlyRow label="Scaling" value={<Bool value={stage.scaling} />} />
+        <ReadonlyRow
           label="Background"
           value={stage.background ? <Mono>{truncate(stage.background, 40)}</Mono> : "—"}
         />
       </Section>
 
       <Section title="Playback">
-        <Row
-          label="Duration"
-          value={
-            stage.playback.duration !== null
-              ? <Mono>{formatTime(stage.playback.duration)} ({stage.playback.duration}s)</Mono>
-              : "open-ended"
-          }
-        />
-        <Row label="Loop" value={<Bool value={stage.playback.loop} />} />
-        <Row label="Sync w/ Clock" value={<Bool value={stage.playback.sync.withClock} />} />
+        <Row label="Duration">
+          <NumberInput
+            value={stage.playback.duration}
+            onChange={(v) => updateStage({ playback: { duration: v } })}
+            nullable
+            min={0}
+          />
+        </Row>
+        <Row label="Loop">
+          <ToggleInput
+            value={stage.playback.loop}
+            onChange={(v) => updateStage({ playback: { loop: v } })}
+          />
+        </Row>
+        <Row label="Sync w/ Clock">
+          <ToggleInput
+            value={stage.playback.sync.withClock}
+            onChange={(v) => updateStage({ playback: { sync: { withClock: v } } })}
+          />
+        </Row>
       </Section>
 
       <Section title="Playback Bar">
-        <Row label="Visible" value={<Bool value={stage.playbackBar.visible} />} />
-        <Row label="Interactive" value={<Bool value={stage.playbackBar.interactive} />} />
-        <Row label="Show Time" value={<Bool value={stage.playbackBar.showCurrentTime} />} />
-        <Row label="Global Mute" value={<Bool value={stage.playbackBar.globalMute} />} />
+        <Row label="Visible">
+          <ToggleInput
+            value={stage.playbackBar.visible}
+            onChange={(v) => updateStage({ playbackBar: { visible: v } })}
+          />
+        </Row>
+        <Row label="Interactive">
+          <ToggleInput
+            value={stage.playbackBar.interactive}
+            onChange={(v) => updateStage({ playbackBar: { interactive: v } })}
+          />
+        </Row>
+        <Row label="Show Time">
+          <ToggleInput
+            value={stage.playbackBar.showCurrentTime}
+            onChange={(v) => updateStage({ playbackBar: { showCurrentTime: v } })}
+          />
+        </Row>
+        <Row label="Global Mute">
+          <ToggleInput
+            value={stage.playbackBar.globalMute}
+            onChange={(v) => updateStage({ playbackBar: { globalMute: v } })}
+          />
+        </Row>
       </Section>
 
       <Section title="Summary" defaultOpen={false}>
-        <Row label="Elements" value={elementCount} />
-        <Row
+        <ReadonlyRow label="Elements" value={elementCount} />
+        <ReadonlyRow
           label="Styles"
           value={stage.styles ? `${stage.styles.length} chars` : "—"}
         />
@@ -121,21 +283,30 @@ function StageInspector({
   );
 }
 
-// --- Element Inspector (with selection) ---
+// ============================================================
+// Element Inspector (with selection) — editable
+// ============================================================
 
 function ElementInspector({ el }: { el: MiseElement }): React.JSX.Element {
+  const updateElement = useEditorStore((s) => s.updateElement);
+  const patch = (p: DeepPartial<MiseElement>): void => updateElement(el.id, p);
+
   return (
     <>
       <Section title="Identity">
-        <Row label="ID" value={<Mono>{el.id}</Mono>} />
-        <Row label="Type" value={el.type} />
-        <Row label="Visible" value={<Bool value={el.visible} />} />
-        <Row label="Background" value={<Bool value={el.background} />} />
+        <ReadonlyRow label="ID" value={<Mono>{el.id}</Mono>} />
+        <ReadonlyRow label="Type" value={el.type} />
+        <Row label="Visible">
+          <ToggleInput value={el.visible} onChange={(v) => patch({ visible: v })} />
+        </Row>
+        <Row label="Background">
+          <ToggleInput value={el.background} onChange={(v) => patch({ background: v })} />
+        </Row>
       </Section>
 
       {el.src !== null && (
         <Section title="Source">
-          <Row label="src" value={<Mono>{truncate(el.src, 60)}</Mono>} />
+          <ReadonlyRow label="src" value={<Mono>{truncate(el.src, 60)}</Mono>} />
         </Section>
       )}
 
@@ -148,57 +319,140 @@ function ElementInspector({ el }: { el: MiseElement }): React.JSX.Element {
       )}
 
       <Section title="Cues">
-        <Row label="Open mode" value={el.open.mode} />
-        <Row label="Open at" value={<Mono>{formatTime(el.open.at)} ({el.open.at}s)</Mono>} />
-        <Row label="Close mode" value={el.close.mode} />
-        <Row
-          label="Close at"
-          value={
-            el.close.at !== null
-              ? <Mono>{formatTime(el.close.at)} ({el.close.at}s)</Mono>
-              : "—"
-          }
-        />
+        <Row label="Open mode">
+          <SelectInput
+            value={el.open.mode}
+            options={["cue", "link", "both"] as const}
+            onChange={(v) => patch({ open: { mode: v } })}
+          />
+        </Row>
+        <Row label="Open at">
+          <NumberInput value={el.open.at} onChange={(v) => v !== null && patch({ open: { at: v } })} min={0} />
+        </Row>
+        <Row label="Close mode">
+          <SelectInput
+            value={el.close.mode}
+            options={["cue", "userClose", "none"] as const}
+            onChange={(v) => patch({ close: { mode: v } })}
+          />
+        </Row>
+        <Row label="Close at">
+          <NumberInput
+            value={el.close.at}
+            onChange={(v) => patch({ close: { at: v } })}
+            nullable
+            min={0}
+          />
+        </Row>
       </Section>
 
       <Section title="Position & Size">
-        <Row label="Position" value={<Mono>{el.position.x}, {el.position.y}</Mono>} />
-        <Row label="Size" value={<Mono>{el.size.width} &times; {el.size.height}</Mono>} />
-        <Row
-          label="zIndex"
-          value={el.zIndex !== null ? <Mono>{el.zIndex}</Mono> : "auto"}
-        />
-        <Row label="mediaFit" value={el.mediaFit} />
+        <Row label="X">
+          <NumberInput value={el.position.x} onChange={(v) => v !== null && patch({ position: { x: v } })} />
+        </Row>
+        <Row label="Y">
+          <NumberInput value={el.position.y} onChange={(v) => v !== null && patch({ position: { y: v } })} />
+        </Row>
+        <Row label="Width">
+          <NumberInput value={el.size.width} onChange={(v) => v !== null && patch({ size: { width: v } })} min={1} />
+        </Row>
+        <Row label="Height">
+          <NumberInput value={el.size.height} onChange={(v) => v !== null && patch({ size: { height: v } })} min={1} />
+        </Row>
+        <Row label="zIndex">
+          <NumberInput value={el.zIndex} onChange={(v) => patch({ zIndex: v })} nullable />
+        </Row>
+        <Row label="mediaFit">
+          <SelectInput
+            value={el.mediaFit}
+            options={["fit", "fill"] as const}
+            onChange={(v) => patch({ mediaFit: v })}
+          />
+        </Row>
       </Section>
 
       <Section title="Flags">
-        <Row label="Movable" value={<Bool value={el.flags.movable} />} />
-        <Row label="Resizable" value={<Bool value={el.flags.resizable} />} />
-        <Row label="Closable" value={<Bool value={el.flags.closable} />} />
-        <Row label="zIndexable" value={<Bool value={el.flags.zIndexable} />} />
+        <Row label="Movable">
+          <ToggleInput value={el.flags.movable} onChange={(v) => patch({ flags: { movable: v } })} />
+        </Row>
+        <Row label="Resizable">
+          <ToggleInput value={el.flags.resizable} onChange={(v) => patch({ flags: { resizable: v } })} />
+        </Row>
+        <Row label="Closable">
+          <ToggleInput value={el.flags.closable} onChange={(v) => patch({ flags: { closable: v } })} />
+        </Row>
+        <Row label="zIndexable">
+          <ToggleInput value={el.flags.zIndexable} onChange={(v) => patch({ flags: { zIndexable: v } })} />
+        </Row>
       </Section>
 
       <Section title="Animation">
-        <Row label="Enter" value={el.animation.enter || "—"} />
-        <Row label="Exit" value={el.animation.exit || "—"} />
+        <ReadonlyRow label="Enter" value={el.animation.enter || "—"} />
+        <ReadonlyRow label="Exit" value={el.animation.exit || "—"} />
       </Section>
 
       {el.playback && (
         <Section title="Playback">
-          <Row label="Initial" value={el.playback.initial} />
-          <Row label="Loop" value={<Bool value={el.playback.loop} />} />
-          <Row label="Sync w/ Clock" value={<Bool value={el.playback.syncWithClock} />} />
-          <Row label="Audience Ctrl" value={<Bool value={el.playback.audienceControl} />} />
-          <Row label="Bar visible" value={<Bool value={el.playback.bar.visible} />} />
+          <Row label="Initial">
+            <SelectInput
+              value={el.playback.initial}
+              options={["playing", "paused"] as const}
+              onChange={(v) => patch({ playback: { initial: v } })}
+            />
+          </Row>
+          <Row label="Loop">
+            <ToggleInput value={el.playback.loop} onChange={(v) => patch({ playback: { loop: v } })} />
+          </Row>
+          <Row label="Sync w/ Clock">
+            <ToggleInput
+              value={el.playback.syncWithClock}
+              onChange={(v) => patch({ playback: { syncWithClock: v } })}
+            />
+          </Row>
+          <Row label="Audience Ctrl">
+            <ToggleInput
+              value={el.playback.audienceControl}
+              onChange={(v) => patch({ playback: { audienceControl: v } })}
+            />
+          </Row>
+          <Row label="Bar visible">
+            <ToggleInput
+              value={el.playback.bar.visible}
+              onChange={(v) => patch({ playback: { bar: { visible: v } } })}
+            />
+          </Row>
         </Section>
       )}
 
       {el.audio && (
         <Section title="Audio">
-          <Row label="Initial" value={el.audio.initial} />
-          <Row label="Audience Ctrl" value={<Bool value={el.audio.audienceControl} />} />
-          <Row label="Fade in" value={el.audio.fadeIn ? `${el.audio.fadeIn}ms` : "—"} />
-          <Row label="Fade out" value={el.audio.fadeOut ? `${el.audio.fadeOut}ms` : "—"} />
+          <Row label="Initial">
+            <SelectInput
+              value={el.audio.initial}
+              options={["on", "off"] as const}
+              onChange={(v) => patch({ audio: { initial: v } })}
+            />
+          </Row>
+          <Row label="Audience Ctrl">
+            <ToggleInput
+              value={el.audio.audienceControl}
+              onChange={(v) => patch({ audio: { audienceControl: v } })}
+            />
+          </Row>
+          <Row label="Fade in (ms)">
+            <NumberInput
+              value={el.audio.fadeIn}
+              onChange={(v) => v !== null && patch({ audio: { fadeIn: v } })}
+              min={0}
+            />
+          </Row>
+          <Row label="Fade out (ms)">
+            <NumberInput
+              value={el.audio.fadeOut}
+              onChange={(v) => v !== null && patch({ audio: { fadeOut: v } })}
+              min={0}
+            />
+          </Row>
         </Section>
       )}
 
@@ -220,7 +474,9 @@ function ElementInspector({ el }: { el: MiseElement }): React.JSX.Element {
   );
 }
 
-// --- Main Inspector ---
+// ============================================================
+// Main Inspector
+// ============================================================
 
 export function Inspector(): React.JSX.Element {
   const meta = useEditorStore((s) => s.composition.meta);
@@ -272,8 +528,4 @@ export function Inspector(): React.JSX.Element {
       </div>
     </div>
   );
-}
-
-function truncate(s: string, max: number): string {
-  return s.length > max ? s.slice(0, max) + "..." : s;
 }
