@@ -3,7 +3,7 @@ import { create } from "zustand";
 import { useEditorStore } from "../store";
 import { sendCommand, listenToPlayer } from "../lib/player-bridge";
 
-// Shared ref so Toolbar can access the iframe
+// Shared ref so Toolbar and Timeline can access the iframe
 interface PlayerRefState {
   iframe: HTMLIFrameElement | null;
   setIframe: (iframe: HTMLIFrameElement | null) => void;
@@ -14,12 +14,14 @@ export const usePlayerRef = create<PlayerRefState>((set) => ({
 }));
 
 const PLAYER_ORIGIN = "http://localhost:5173";
+const RELOAD_DEBOUNCE_MS = 300;
 
 export function StagePreview(): React.JSX.Element {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const composition = useEditorStore((s) => s.composition);
   const setCurrentTime = useEditorStore((s) => s.setCurrentTime);
   const setPlaying = useEditorStore((s) => s.setPlaying);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Register iframe ref globally
   useEffect(() => {
@@ -42,11 +44,17 @@ export function StagePreview(): React.JSX.Element {
     sendCommand(iframe, "load", composition);
   }, [composition]);
 
-  // Re-send composition when store changes (e.g. file open)
+  // Re-send composition when store changes — debounced to avoid rapid reloads during editing
   useEffect(() => {
     const iframe = iframeRef.current;
     if (!iframe?.contentWindow) return;
-    sendCommand(iframe, "load", composition);
+
+    clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      sendCommand(iframe, "load", composition);
+    }, RELOAD_DEBOUNCE_MS);
+
+    return () => clearTimeout(debounceTimer.current);
   }, [composition]);
 
   return (
