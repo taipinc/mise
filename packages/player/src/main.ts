@@ -101,7 +101,8 @@ async function init(): Promise<void> {
     return;
   }
 
-  mountPlayer(host, result.data);
+  const isEmbedded = window.parent !== window;
+  mountPlayer(host, result.data, { skipIntro: isEmbedded });
 }
 
 init();
