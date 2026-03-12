@@ -8,10 +8,12 @@ interface EditorState {
   currentTime: number;
   playing: boolean;
   fileName: string | null;
+  selectedElementId: string | null;
 
   setComposition: (composition: MiseComposition, fileName?: string) => void;
   setCurrentTime: (time: number) => void;
   setPlaying: (playing: boolean) => void;
+  setSelectedElementId: (id: string | null) => void;
 }
 
 function parseComposition(raw: unknown): MiseComposition {
@@ -32,13 +34,16 @@ export const useEditorStore = create<EditorState>((set) => ({
   currentTime: 0,
   playing: false,
   fileName: "test04.json",
+  selectedElementId: null,
 
   setComposition: (composition, fileName) =>
-    set({ composition, fileName: fileName ?? null, currentTime: 0, playing: false }),
+    set({ composition, fileName: fileName ?? null, currentTime: 0, playing: false, selectedElementId: null }),
 
   setCurrentTime: (currentTime) => set({ currentTime }),
 
   setPlaying: (playing) => set({ playing }),
+
+  setSelectedElementId: (selectedElementId) => set({ selectedElementId }),
 }));
 
 export { parseComposition };
